@@ -1,8 +1,9 @@
 import { Layout } from "@/components/layout";
 import { useGetCurrentUser, useGetPropertyStats, useListProperties, useListLeads, useListUsers, useApproveUser, useCreateProperty, useUpdateProperty, useDeleteProperty, getGetPropertyStatsQueryKey, getListPropertiesQueryKey, getListLeadsQueryKey, getListUsersQueryKey } from "@workspace/api-client-react";
+import { useUpload } from "@workspace/object-storage-web";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
-import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,6 +38,86 @@ const propertySchema = z.object({
   tag: z.enum(["Nuevo", "Exclusivo", "Vendido"]).optional().nullable(),
   images: z.string().transform(str => str.split(',').map(s => s.trim()).filter(Boolean))
 });
+
+function ImageUploadField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const urls = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+  const { uploadFile, isUploading } = useUpload({
+    onSuccess: (response) => {
+      const serveUrl = `/api/storage${response.objectPath}`;
+      const existing = value ? value.split(',').map(s => s.trim()).filter(Boolean) : [];
+      onChange([...existing, serveUrl].join(', '));
+      toast({ title: "Imagen subida correctamente" });
+    },
+    onError: () => {
+      toast({ title: "Error al subir imagen", variant: "destructive" });
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    for (const file of files) {
+      await uploadFile(file);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeUrl = (idx: number) => {
+    const next = urls.filter((_, i) => i !== idx);
+    onChange(next.join(', '));
+  };
+
+  return (
+    <div className="space-y-3">
+      {urls.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {urls.map((url, idx) => (
+            <div key={idx} className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-video bg-gray-50">
+              <img src={url} alt={`Imagen ${idx + 1}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <button type="button" onClick={() => removeUrl(idx)} className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600">
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+              {idx === 0 && <span className="absolute top-1 left-1 bg-primary text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Principal</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2 items-start">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="flex items-center gap-2"
+        >
+          {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+          {isUploading ? "Subiendo..." : "Subir fotos desde tu computadora"}
+        </Button>
+        {urls.length === 0 && (
+          <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-1.5">
+            <ImageIcon className="w-3.5 h-3.5" />
+            <span>Ninguna imagen añadida</span>
+          </div>
+        )}
+      </div>
+      <p className="text-xs text-gray-400">La primera imagen será la principal. Puedes subir varias fotos.</p>
+    </div>
+  );
+}
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -416,11 +497,8 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
 
               <FormField control={form.control} name="images" render={({ field }) => (
                 <FormItem className="md:col-span-2">
-                  <FormLabel>Imágenes (URLs separadas por coma)</FormLabel>
-                  <FormControl><Textarea {...field} rows={2} placeholder="https://i.ibb.co/foto1.jpg, https://i.ibb.co/foto2.jpg" /></FormControl>
-                  <p className="text-xs text-amber-600 mt-1">
-                    Usa servicios que permitan enlace directo: <strong>ImgBB</strong> (imgbb.com), <strong>PostImages</strong> (postimages.org) o <strong>Cloudinary</strong>. Imgur y Google Drive <strong>no funcionan</strong>.
-                  </p>
+                  <FormLabel>Imágenes</FormLabel>
+                  <ImageUploadField value={field.value} onChange={field.onChange} />
                   <FormMessage />
                 </FormItem>
               )} />
