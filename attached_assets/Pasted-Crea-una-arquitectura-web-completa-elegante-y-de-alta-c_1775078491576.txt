@@ -1,0 +1,97 @@
+Crea una arquitectura web completa, elegante y de alta conversión para "HD RIVIC GLOBAL S.A.C." - una firma inmobiliaria integral en Perú, especializada en la compra, venta, alquiler y gestión de propiedades (casas, departamentos, terrenos y Airbnb), así como en asesoría experta.
+
+DISEÑO UI/UX Y ESTÉTICA (THEME: CORPORATE TRUST & MODERN ELEGANCE):
+
+Paleta de colores: Tonos que inspiren confianza, solidez y exclusividad. Azul Marino Profundo (#1A2B4C) como color principal, acentos en Oro Suave (#D4AF37) o Cobre para resaltar elementos de valor (CTAs, iconos de precio), y fondos en Blanco Nieve (#FFFFFF) y Gris Perla (#F5F7FA) para máxima legibilidad y sensación de amplitud.
+
+Tipografía: Una fuente Serif moderna y sofisticada para títulos (ej. Playfair Display o Merriweather) que denote autoridad y experiencia, combinada con una Sans-serif sumamente limpia y amigable para cuerpos de texto y datos técnicos (ej. Lato o Montserrat).
+
+Dirección de Arte: Fotografía arquitectónica y de interiores de alta gama. Espacios iluminados, estilo de vida aspiracional y vistas panorámicas. Uso de recorridos virtuales o video tours integrados de forma nativa.
+
+Micro-interacciones: Transiciones suaves (fade-ins) al hacer scroll. Efecto "elevación" (shadow sutil) al pasar el cursor sobre las tarjetas de propiedades. Animaciones limpias que denoten un servicio premium y sin fricciones.
+
+HERO SECTION (PRIMERA IMPRESIÓN Y MOTOR DE BÚSQUEDA):
+
+Fondo: Carrusel con fundido suave o video cinemático mostrando propiedades destacadas (un departamento moderno, una casa familiar, un terreno amplio). Overlay sutil para garantizar el contraste del texto.
+
+Título principal (H1): "Construyendo tu Futuro, Encontrando tu Lugar."
+
+Subtítulo: "Gestión inmobiliaria integral en Perú. Compra, venta, alquiler y asesoría experta respaldada por HD RIVIC GLOBAL S.A.C."
+
+Buscador Principal (Sticky/Flotante): Ubicado estratégicamente sobre el hero. Debe incluir:
+
+Selector: Comprar / Alquilar / Airbnb.
+
+Tipo de inmueble: Casa / Depa / Terreno / Comercial.
+
+Ubicación (Autocompletado).
+
+Rango de precios.
+
+Botón de búsqueda vibrante (dorado/cobre) "Buscar Propiedades".
+
+PORTAFOLIO DE SERVICIOS (OUR OFFERINGS):
+
+Layout: Grid de iconos minimalistas y elegantes.
+
+Categorías claras:
+
+Compra/Venta: Transacciones seguras y rápidas.
+
+Alquileres: Gestión de inquilinos y contratos.
+
+Gestión Airbnb: Optimización de perfiles, administración y maximización de ROI para rentas cortas.
+
+Terrenos e Inversión: Asesoría para desarrollo de proyectos.
+
+Asesoría Inmobiliaria: Legal, financiera y tasaciones.
+
+PROPIEDADES DESTACADAS (FEATURED LISTINGS):
+
+Grid de tarjetas de propiedades altamente visuales.
+
+Estructura de la Tarjeta: Imagen principal (con etiqueta "Nuevo", "Vendido" o "Exclusivo"), Precio destacado, Título/Ubicación, y características clave con iconos (🛏️ Habitaciones, 🛁 Baños, 📐 Área m²).
+
+Hover State: Al pasar el cursor, la imagen hace un ligero zoom y muestra un carrusel de fotos secundarias o un botón rápido de "Ver Detalles / Agendar Visita".
+
+SOBRE NOSOTROS (TRUST & CORPORATE IDENTITY):
+
+Sección que humanice la marca S.A.C.
+
+Mensaje: "Transparencia, rentabilidad y seguridad jurídica en cada transacción".
+
+Destacar los años de experiencia, el conocimiento del mercado local (Perú) y el enfoque en el retorno de inversión (especialmente para la rama de Airbnb y terrenos).
+
+TESTIMONIALES Y PREGUNTAS FRECUENTES (FAQ):
+
+Testimoniales: Historias de éxito. "Cómo HD RIVIC nos ayudó a vender nuestro depa en tiempo récord" o "El incremento de ingresos con su gestión de Airbnb". Incluir fotos reales (con permiso) o iniciales elegantes.
+
+FAQ: Preguntas sobre: "Proceso de calificación para alquiler", "Comisiones por venta", "¿Cómo funciona el modelo de gestión Airbnb?", "Requisitos legales para compra de terrenos".
+
+SISTEMA DE CONTACTO Y CAPTACIÓN DE LEADS:
+
+Formularios Dinámicos: Diferenciados según la intención del usuario (Ej. Un botón de "Quiero Vender" abre un formulario pidiendo datos de la propiedad; "Quiero Comprar" pide preferencias y presupuesto).
+
+Integración WhatsApp: Botón flotante permanente y altamente visible para asistencia inmediata.
+
+Agendamiento: Integración con un sistema tipo Calendly para reservar visitas presenciales o videollamadas de asesoría.
+
+CARACTERÍSTICAS TÉCNICAS AVANZADAS Y ARQUITECTURA:
+
+SEO Inmobiliario: Estructura de URLs amigable (ej. /propiedades/venta/departamento-lima), Schema Markup para RealEstateAgent y Product (para las casas), optimización de imágenes para carga rápida.
+
+Performance: Arquitectura SPA (Single Page Application) o SSR (Server-Side Rendering) como Next.js, crucial para que el buscador de propiedades sea instantáneo sin recargar la página.
+
+Integración CRM (Escalabilidad): Preparado para conectarse vía API con CRMs inmobiliarios (como Wasi, EasyBroker o un Hubspot) para gestionar los leads y el inventario automáticamente.
+
+Seguridad: Certificado SSL, protección de datos personales (cumplimiento estricto de la Ley de Protección de Datos Personales del Perú para los formularios).
+
+MOBILE OPTIMIZATION (MOBILE-FIRST):
+
+Buscador adaptado: El buscador del hero debe colapsarse elegantemente en móvil y expandirse en pantalla completa al tocarlo.
+
+Navegación Táctil: Carruseles de fotos de propiedades que se puedan deslizar con el dedo (swipe).
+
+CTAs Fijos: Botón de "Contactar por WhatsApp" o "Llamar" siempre visible en la parte inferior de la pantalla al ver el detalle de una propiedad.
+
+El sitio debe transmitir absoluta seriedad corporativa, facilitando al mismo tiempo una experiencia de búsqueda de propiedades intuitiva y visualmente espectacular.

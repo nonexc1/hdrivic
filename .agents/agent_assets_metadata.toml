@@ -1,0 +1,56 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "EBLyJN9c1-KGpPvpW5oFH"
+uri = "file://artifacts/hd-rivic/public/images/hero-1.png"
+type = "image"
+title = "Luxury Lima apartment living room"
+
+[[generated]]
+id = "a8ozHOKgbkkk8Le9FYQ2s"
+uri = "file://artifacts/hd-rivic/public/images/hero-2.png"
+type = "image"
+title = "Modern family house exterior"
+
+[[generated]]
+id = "nte5tl2J8TBb-H6rRv8eJ"
+uri = "file://artifacts/hd-rivic/public/images/hero-3.png"
+type = "image"
+title = "Aerial city view of Lima"
+
+[[generated]]
+id = "MS_siIxbNHOgd5GdQYWSB"
+uri = "file://artifacts/hd-rivic/public/images/prop-1.png"
+type = "image"
+title = "Modern apartment living area"
+
+[[generated]]
+id = "7gD5O0rAaA6eIC_BU1Oel"
+uri = "file://artifacts/hd-rivic/public/images/prop-2.png"
+type = "image"
+title = "Luxury bathroom with tub"
+
+[[generated]]
+id = "OTeCHwgAuh1wLk2VwjdqB"
+uri = "file://artifacts/hd-rivic/public/images/prop-3.png"
+type = "image"
+title = "Sleek modern kitchen"
+
+[[generated]]
+id = "hpR1QRVPmzFDQ3-c0bBUT"
+uri = "file://artifacts/hd-rivic/public/images/prop-4.png"
+type = "image"
+title = "Elegant bedroom with view"
+
+[[generated]]
+id = "BdF0OPp0hfbBme988hctw"
+uri = "file://artifacts/hd-rivic/public/images/prop-5.png"
+type = "image"
+title = "Outdoor terrace with pool"
+
+[[generated]]
+id = "MsLKGz5iC0CTZgjG__CNQ"
+uri = "file://artifacts/hd-rivic/public/images/prop-6.png"
+type = "image"
+title = "Modern house facade"

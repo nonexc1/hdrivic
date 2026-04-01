@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "HD RIVIC GLOBAL - Inmobiliaria"
+version = "1.0.0"
+id = "artifacts/hd-rivic"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18643
+
+[services.development]
+run = "pnpm --filter @workspace/hd-rivic run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/hd-rivic", "run", "build" ]
+publicDir = "artifacts/hd-rivic/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18643"
+BASE_PATH = "/"

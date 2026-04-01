@@ -1,22 +1,26 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: HD RIVIC GLOBAL - Real Estate API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: properties
+    description: Property listings
+  - name: leads
+    description: Lead capture / contact forms
+  - name: users
+    description: Admin user management
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +28,365 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /properties:
+    get:
+      operationId: listProperties
+      tags: [properties]
+      summary: List all properties with optional filters
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: ["string", "null"]
+            enum: [venta, alquiler, airbnb, vendido, null]
+        - name: type
+          in: query
+          schema:
+            type: ["string", "null"]
+            enum: [casa, departamento, terreno, comercial, null]
+        - name: district
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: minPrice
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: maxPrice
+          in: query
+          schema:
+            type: ["number", "null"]
+        - name: featured
+          in: query
+          schema:
+            type: ["boolean", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: offset
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyList"
+
+    post:
+      operationId: createProperty
+      tags: [properties]
+      summary: Create a new property (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePropertyBody"
+      responses:
+        "201":
+          description: Created property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /properties/featured:
+    get:
+      operationId: getFeaturedProperties
+      tags: [properties]
+      summary: Get featured properties for the hero section
+      responses:
+        "200":
+          description: Featured properties
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyList"
+
+  /properties/stats:
+    get:
+      operationId: getPropertyStats
+      tags: [properties]
+      summary: Aggregate stats (counts by type, status, districts)
+      responses:
+        "200":
+          description: Property statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PropertyStats"
+
+  /properties/districts:
+    get:
+      operationId: listDistricts
+      tags: [properties]
+      summary: List all unique districts that have properties
+      responses:
+        "200":
+          description: List of districts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DistrictList"
+
+  /properties/{id}:
+    get:
+      operationId: getProperty
+      tags: [properties]
+      summary: Get a property by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Property detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateProperty
+      tags: [properties]
+      summary: Update a property (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePropertyBody"
+      responses:
+        "200":
+          description: Updated property
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Property"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      operationId: deleteProperty
+      tags: [properties]
+      summary: Delete a property (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /leads:
+    post:
+      operationId: createLead
+      tags: [leads]
+      summary: Submit a contact/lead form
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLeadBody"
+      responses:
+        "201":
+          description: Lead created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List all leads (admin only)
+      responses:
+        "200":
+          description: List of leads
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadList"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users (owner only)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserList"
+
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Register a new user (pending approval)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserBody"
+      responses:
+        "201":
+          description: User created (pending approval)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          description: Validation error or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/login:
+    post:
+      operationId: loginUser
+      tags: [users]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Logged in user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Invalid credentials or not approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get the currently logged-in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/logout:
+    post:
+      operationId: logoutUser
+      tags: [users]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /users/{id}/approve:
+    patch:
+      operationId: approveUser
+      tags: [users]
+      summary: Approve a pending user (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +397,378 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+          enum: [USD, PEN]
+        status:
+          type: string
+          enum: [venta, alquiler, airbnb, vendido]
+        type:
+          type: string
+          enum: [casa, departamento, terreno, comercial]
+        district:
+          type: string
+        address:
+          type: string
+        area:
+          type: ["number", "null"]
+        bedrooms:
+          type: ["integer", "null"]
+        bathrooms:
+          type: ["integer", "null"]
+        parkingSpaces:
+          type: ["integer", "null"]
+        featured:
+          type: boolean
+        images:
+          type: array
+          items:
+            type: string
+        videoUrl:
+          type: ["string", "null"]
+        whatsappNumber:
+          type: string
+        tag:
+          type: ["string", "null"]
+          enum: [Nuevo, Exclusivo, Vendido, null]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - title
+        - description
+        - price
+        - currency
+        - status
+        - type
+        - district
+        - address
+        - featured
+        - images
+        - whatsappNumber
+        - createdAt
+        - updatedAt
+
+    PropertyList:
+      type: object
+      properties:
+        properties:
+          type: array
+          items:
+            $ref: "#/components/schemas/Property"
+        total:
+          type: integer
+      required:
+        - properties
+        - total
+
+    CreatePropertyBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+          enum: [USD, PEN]
+        status:
+          type: string
+          enum: [venta, alquiler, airbnb, vendido]
+        type:
+          type: string
+          enum: [casa, departamento, terreno, comercial]
+        district:
+          type: string
+        address:
+          type: string
+        area:
+          type: ["number", "null"]
+        bedrooms:
+          type: ["integer", "null"]
+        bathrooms:
+          type: ["integer", "null"]
+        parkingSpaces:
+          type: ["integer", "null"]
+        featured:
+          type: boolean
+        images:
+          type: array
+          items:
+            type: string
+        videoUrl:
+          type: ["string", "null"]
+        whatsappNumber:
+          type: string
+        tag:
+          type: ["string", "null"]
+          enum: [Nuevo, Exclusivo, Vendido, null]
+      required:
+        - title
+        - description
+        - price
+        - currency
+        - status
+        - type
+        - district
+        - address
+        - featured
+        - images
+        - whatsappNumber
+
+    UpdatePropertyBody:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        currency:
+          type: string
+          enum: [USD, PEN]
+        status:
+          type: string
+          enum: [venta, alquiler, airbnb, vendido]
+        type:
+          type: string
+          enum: [casa, departamento, terreno, comercial]
+        district:
+          type: string
+        address:
+          type: string
+        area:
+          type: ["number", "null"]
+        bedrooms:
+          type: ["integer", "null"]
+        bathrooms:
+          type: ["integer", "null"]
+        parkingSpaces:
+          type: ["integer", "null"]
+        featured:
+          type: boolean
+        images:
+          type: array
+          items:
+            type: string
+        videoUrl:
+          type: ["string", "null"]
+        whatsappNumber:
+          type: string
+        tag:
+          type: ["string", "null"]
+          enum: [Nuevo, Exclusivo, Vendido, null]
+
+    PropertyStats:
+      type: object
+      properties:
+        totalProperties:
+          type: integer
+        forSale:
+          type: integer
+        forRent:
+          type: integer
+        airbnb:
+          type: integer
+        sold:
+          type: integer
+        byType:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountByLabel"
+        byDistrict:
+          type: array
+          items:
+            $ref: "#/components/schemas/CountByLabel"
+      required:
+        - totalProperties
+        - forSale
+        - forRent
+        - airbnb
+        - sold
+        - byType
+        - byDistrict
+
+    CountByLabel:
+      type: object
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+      required:
+        - label
+        - count
+
+    DistrictList:
+      type: object
+      properties:
+        districts:
+          type: array
+          items:
+            type: string
+      required:
+        - districts
+
+    Lead:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [comprar, alquilar, vender, agendar_visita, informacion]
+        propertyId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - phone
+        - message
+        - type
+        - createdAt
+
+    LeadList:
+      type: object
+      properties:
+        leads:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lead"
+        total:
+          type: integer
+      required:
+        - leads
+        - total
+
+    CreateLeadBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        message:
+          type: string
+        type:
+          type: string
+          enum: [comprar, alquilar, vender, agendar_visita, informacion]
+        propertyId:
+          type: ["integer", "null"]
+      required:
+        - name
+        - email
+        - phone
+        - message
+        - type
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [owner, admin, pending]
+        approved:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - email
+        - role
+        - approved
+        - createdAt
+
+    UserList:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        total:
+          type: integer
+      required:
+        - users
+        - total
+
+    CreateUserBody:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - name
+        - email
+        - password
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
