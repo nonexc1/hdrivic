@@ -1,15 +1,29 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store } from "lucide-react";
+import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store, ImageOff } from "lucide-react";
 import { Property } from "@workspace/api-client-react/src/generated/api.schemas";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState } from "react";
 
 interface PropertyCardProps {
   property: Property;
   index?: number;
 }
+
+const ImageWithFallback = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div className={`w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-400 gap-2 ${className}`}>
+        <ImageOff className="w-10 h-10 opacity-40" />
+        <span className="text-xs text-gray-400">Imagen no disponible</span>
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} className={className} onError={() => setFailed(true)} />;
+};
 
 export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
   const formatPrice = (price: number, currency: string) => {
@@ -50,21 +64,21 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
             {/* Images */}
             {property.images && property.images.length > 0 ? (
               <>
-                <img 
-                  src={property.images[0]} 
-                  alt={property.title} 
+                <ImageWithFallback
+                  src={property.images[0]}
+                  alt={property.title}
                   className={`w-full h-full object-cover transition-transform duration-700 ease-in-out group-hover:scale-110 ${property.images.length > 1 ? 'group-hover:opacity-0' : ''}`}
                 />
                 {property.images.length > 1 && (
-                  <img 
-                    src={property.images[1]} 
-                    alt={`${property.title} alternate`} 
+                  <ImageWithFallback
+                    src={property.images[1]}
+                    alt={`${property.title} alternate`}
                     className="w-full h-full object-cover absolute inset-0 opacity-0 transition-opacity duration-700 ease-in-out group-hover:opacity-100 group-hover:scale-105"
                   />
                 )}
               </>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400">
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 gap-2">
                 <Building2 className="w-12 h-12 opacity-20" />
               </div>
             )}

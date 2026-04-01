@@ -417,7 +417,10 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
               <FormField control={form.control} name="images" render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel>Imágenes (URLs separadas por coma)</FormLabel>
-                  <FormControl><Textarea {...field} rows={2} /></FormControl>
+                  <FormControl><Textarea {...field} rows={2} placeholder="https://i.ibb.co/foto1.jpg, https://i.ibb.co/foto2.jpg" /></FormControl>
+                  <p className="text-xs text-amber-600 mt-1">
+                    Usa servicios que permitan enlace directo: <strong>ImgBB</strong> (imgbb.com), <strong>PostImages</strong> (postimages.org) o <strong>Cloudinary</strong>. Imgur y Google Drive <strong>no funcionan</strong>.
+                  </p>
                   <FormMessage />
                 </FormItem>
               )} />
