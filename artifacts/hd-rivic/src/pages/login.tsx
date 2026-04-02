@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, KeyRound, Mail } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const loginSchema = z.object({
@@ -101,9 +101,10 @@ export default function Login() {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="login">Ingresar</TabsTrigger>
                 <TabsTrigger value="register">Solicitar Acceso</TabsTrigger>
+                <TabsTrigger value="forgot">Olvidé clave</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -139,6 +140,12 @@ export default function Login() {
                       {loginUser.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                       Iniciar Sesión
                     </Button>
+                    <p className="text-center text-xs text-gray-400">
+                      ¿Olvidaste tu contraseña?{" "}
+                      <button type="button" className="text-primary underline" onClick={() => setActiveTab("forgot")}>
+                        Haz clic aquí
+                      </button>
+                    </p>
                   </form>
                 </Form>
               </TabsContent>
@@ -191,6 +198,38 @@ export default function Login() {
                     </Button>
                   </form>
                 </Form>
+              </TabsContent>
+
+              <TabsContent value="forgot">
+                <div className="space-y-5 py-2">
+                  <div className="flex flex-col items-center text-center gap-3">
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                      <KeyRound className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-lg">¿Olvidaste tu contraseña?</h3>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Contacta al administrador del sistema para que restablezca tu contraseña desde el panel de gestión de usuarios.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 space-y-2">
+                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Contacto</p>
+                    <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <Mail className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>admin@hdrivic.com</span>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-gray-400 text-center">
+                    El administrador podrá asignarte una nueva contraseña temporal desde el panel Admin → Usuarios.
+                  </p>
+
+                  <Button variant="outline" className="w-full" onClick={() => setActiveTab("login")}>
+                    Volver al inicio de sesión
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>

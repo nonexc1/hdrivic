@@ -29,6 +29,7 @@ export const propertiesTable = pgTable("properties", {
   videoUrl: text("video_url"),
   whatsappNumber: text("whatsapp_number").notNull().default("+51999999999"),
   tag: text("tag"),
+  createdBy: integer("created_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

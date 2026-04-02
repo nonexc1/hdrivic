@@ -1,9 +1,10 @@
 import { Layout } from "@/components/layout";
 import { useGetCurrentUser, useGetPropertyStats, useListProperties, useListLeads, useListUsers, useApproveUser, useCreateProperty, useUpdateProperty, useDeleteProperty, getGetPropertyStatsQueryKey, getListPropertiesQueryKey, getListLeadsQueryKey, getListUsersQueryKey } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useEffect, useState, useRef } from "react";
-import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon } from "lucide-react";
+import { useMutation, useQueryClient as useQC } from "@tanstack/react-query";
+import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon, ShieldCheck, Key } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -162,11 +163,11 @@ export default function Admin() {
             </TabsList>
 
             <TabsContent value="dashboard">
-              <DashboardTab />
+              <DashboardTab currentUser={user} />
             </TabsContent>
 
             <TabsContent value="properties">
-              <PropertiesTab />
+              <PropertiesTab currentUser={user} />
             </TabsContent>
 
             <TabsContent value="leads">
@@ -175,7 +176,7 @@ export default function Admin() {
 
             {user.role === "owner" && (
               <TabsContent value="users">
-                <UsersTab />
+                <UsersTab currentUser={user} />
               </TabsContent>
             )}
           </Tabs>
@@ -185,7 +186,7 @@ export default function Admin() {
   );
 }
 
-function DashboardTab() {
+function DashboardTab({ currentUser }: { currentUser: any }) {
   const { data: stats, isLoading } = useGetPropertyStats();
 
   if (isLoading) return <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -265,8 +266,11 @@ function DashboardTab() {
   );
 }
 
-function PropertiesTab() {
-  const { data: propertiesData, isLoading } = useListProperties();
+function PropertiesTab({ currentUser }: { currentUser: any }) {
+  const isAdmin = currentUser?.role === "admin";
+  const { data: propertiesData, isLoading } = useListProperties(
+    isAdmin ? { createdBy: currentUser.id } as any : undefined
+  );
   const [isAddOpen, setIsAddOpen] = useState(false);
 
   if (isLoading) return <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -274,7 +278,10 @@ function PropertiesTab() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Gestión de Propiedades</CardTitle>
+        <CardTitle>
+          Gestión de Propiedades
+          {isAdmin && <span className="ml-2 text-sm font-normal text-gray-400">(solo tus propiedades)</span>}
+        </CardTitle>
         <PropertyFormDialog open={isAddOpen} onOpenChange={setIsAddOpen} mode="create" />
       </CardHeader>
       <CardContent>
@@ -590,7 +597,13 @@ function LeadsTab() {
                 <TableCell>
                   <Badge variant="outline" className="uppercase text-[10px]">{lead.type.replace('_', ' ')}</Badge>
                 </TableCell>
-                <TableCell>{lead.propertyId ? `#${lead.propertyId}` : '-'}</TableCell>
+                <TableCell>
+                  {lead.propertyId ? (
+                    <Link href={`/propiedades/${lead.propertyId}`} className="text-primary hover:underline font-medium">
+                      #{lead.propertyId}
+                    </Link>
+                  ) : '-'}
+                </TableCell>
               </TableRow>
             ))}
             {leadsData?.leads.length === 0 && (
@@ -605,67 +618,150 @@ function LeadsTab() {
   );
 }
 
-function UsersTab() {
+function UsersTab({ currentUser }: { currentUser: any }) {
   const { data: usersData, isLoading } = useListUsers();
   const approveUser = useApproveUser();
-  const queryClient = useQueryClient();
+  const queryClient = useQC();
   const { toast } = useToast();
+  const [resetDialog, setResetDialog] = useState<{ open: boolean; userId: number; userName: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+
+  const changeRole = useMutation({
+    mutationFn: async ({ id, role }: { id: number; role: string }) => {
+      const res = await fetch(`/api/users/${id}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ role }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Rol actualizado correctamente" });
+      queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
+  });
+
+  const resetPassword = useMutation({
+    mutationFn: async ({ id, newPassword }: { id: number; newPassword: string }) => {
+      const res = await fetch(`/api/users/${id}/reset-password`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ newPassword }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Contraseña restablecida correctamente" });
+      setResetDialog(null);
+      setNewPassword("");
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
+  });
 
   if (isLoading) return <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
-  const handleApprove = (id: number) => {
-    approveUser.mutate({ id }, {
-      onSuccess: () => {
-        toast({ title: "Éxito", description: "Usuario aprobado." });
-        queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() });
-      },
-      onError: () => toast({ variant: "destructive", title: "Error", description: "No se pudo aprobar." })
-    });
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Gestión de Usuarios (Solo Owner)</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Rol</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {usersData?.users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="uppercase text-[10px]">{user.role}</Badge>
-                </TableCell>
-                <TableCell>
-                  {user.approved ? (
-                    <Badge className="bg-green-100 text-green-800 border-green-200">Aprobado</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-orange-500 border-orange-200">Pendiente</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  {!user.approved && user.role !== "owner" && (
-                    <Button size="sm" onClick={() => handleApprove(user.id)} disabled={approveUser.isPending}>
-                      Aprobar
-                    </Button>
-                  )}
-                </TableCell>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Gestión de Usuarios</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {usersData?.users.map((user) => (
+                <TableRow key={user.id}>
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={user.role}
+                      onValueChange={(role) => changeRole.mutate({ id: user.id, role })}
+                      disabled={user.id === currentUser?.id}
+                    >
+                      <SelectTrigger className="w-28 h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="owner">Owner</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="pending">Pendiente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    {user.approved ? (
+                      <Badge className="bg-green-100 text-green-800 border-green-200">Aprobado</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-orange-500 border-orange-200">Pendiente</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {!user.approved && (
+                        <Button size="sm" variant="outline" onClick={() => approveUser.mutate({ id: user.id }, {
+                          onSuccess: () => { toast({ title: "Usuario aprobado" }); queryClient.invalidateQueries({ queryKey: getListUsersQueryKey() }); }
+                        })} disabled={approveUser.isPending}>
+                          <CheckCircle className="w-3.5 h-3.5 mr-1" /> Aprobar
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-gray-500"
+                        onClick={() => { setResetDialog({ open: true, userId: user.id, userName: user.name }); setNewPassword(""); }}
+                      >
+                        <Key className="w-3.5 h-3.5 mr-1" /> Contraseña
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={!!resetDialog?.open} onOpenChange={(o) => { if (!o) setResetDialog(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Restablecer contraseña — {resetDialog?.userName}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-gray-500">Escribe la nueva contraseña para este usuario.</p>
+            <Input
+              type="password"
+              placeholder="Nueva contraseña (mín. 6 caracteres)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetDialog(null)}>Cancelar</Button>
+            <Button
+              onClick={() => resetPassword.mutate({ id: resetDialog!.userId, newPassword })}
+              disabled={resetPassword.isPending || newPassword.length < 6}
+            >
+              {resetPassword.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+              Restablecer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
