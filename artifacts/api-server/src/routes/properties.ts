@@ -12,6 +12,10 @@ import { eq, and, gte, lte, sql, count } from "drizzle-orm";
 
 const router: IRouter = Router();
 
+function getSession(req: any): { userId?: number; role?: string } {
+  return req.session as Record<string, unknown> ?? {};
+}
+
 router.get("/", async (req, res) => {
   try {
     const query = ListPropertiesQueryParams.parse(req.query);
@@ -28,6 +32,12 @@ router.get("/", async (req, res) => {
     }
     if (query.maxPrice) {
       conditions.push(lte(propertiesTable.price, String(query.maxPrice)));
+    }
+
+    // Admin-only filter: restrict to their own properties
+    const createdByFilter = req.query.createdBy ? parseInt(req.query.createdBy as string) : null;
+    if (createdByFilter) {
+      conditions.push(eq(propertiesTable.createdBy, createdByFilter));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -61,6 +71,7 @@ router.get("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
+    const session = getSession(req);
     const body = CreatePropertyBody.parse(req.body);
     const [property] = await db
       .insert(propertiesTable)
@@ -68,6 +79,7 @@ router.post("/", async (req, res) => {
         ...body,
         price: String(body.price),
         area: body.area != null ? String(body.area) : null,
+        createdBy: session.userId ?? null,
       })
       .returning();
 
@@ -106,19 +118,27 @@ router.get("/featured", async (req, res) => {
 
 router.get("/stats", async (req, res) => {
   try {
+    const session = getSession(req);
+    const createdByFilter = req.query.createdBy ? parseInt(req.query.createdBy as string) : null;
+
+    const baseWhere = createdByFilter ? eq(propertiesTable.createdBy, createdByFilter) : undefined;
+
     const [all, byStatus, byType, byDistrict] = await Promise.all([
-      db.select({ count: count() }).from(propertiesTable),
+      db.select({ count: count() }).from(propertiesTable).where(baseWhere),
       db
         .select({ status: propertiesTable.status, count: count() })
         .from(propertiesTable)
+        .where(baseWhere)
         .groupBy(propertiesTable.status),
       db
         .select({ type: propertiesTable.type, count: count() })
         .from(propertiesTable)
+        .where(baseWhere)
         .groupBy(propertiesTable.type),
       db
         .select({ district: propertiesTable.district, count: count() })
         .from(propertiesTable)
+        .where(baseWhere)
         .groupBy(propertiesTable.district),
     ]);
 
@@ -180,8 +200,22 @@ router.get("/:id", async (req, res) => {
 
 router.patch("/:id", async (req, res) => {
   try {
+    const session = getSession(req);
     const { id } = UpdatePropertyParams.parse({ id: parseInt(req.params.id) });
     const body = UpdatePropertyBody.parse(req.body);
+
+    // Check ownership for admin (non-owner) users
+    if (session.userId && session.role === "admin") {
+      const [existing] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
+      if (!existing) {
+        res.status(404).json({ error: "Property not found" });
+        return;
+      }
+      if (existing.createdBy !== session.userId) {
+        res.status(403).json({ error: "No tienes permiso para editar esta propiedad" });
+        return;
+      }
+    }
 
     const updates: Record<string, unknown> = { ...body };
     if (body.price !== undefined) updates.price = String(body.price);
@@ -211,7 +245,22 @@ router.patch("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
+    const session = getSession(req);
     const { id } = DeletePropertyParams.parse({ id: parseInt(req.params.id) });
+
+    // Check ownership for admin (non-owner) users
+    if (session.userId && session.role === "admin") {
+      const [existing] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
+      if (!existing) {
+        res.status(404).json({ error: "Property not found" });
+        return;
+      }
+      if (existing.createdBy !== session.userId) {
+        res.status(403).json({ error: "No tienes permiso para eliminar esta propiedad" });
+        return;
+      }
+    }
+
     await db.delete(propertiesTable).where(eq(propertiesTable.id, id));
     res.json({ success: true });
   } catch (err) {

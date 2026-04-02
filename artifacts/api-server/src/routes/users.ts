@@ -15,6 +15,10 @@ const sanitize = (u: typeof usersTable.$inferSelect) => ({
   createdAt: u.createdAt,
 });
 
+function getSession(req: any): { userId?: number; role?: string } {
+  return req.session as Record<string, unknown> ?? {};
+}
+
 router.get("/", async (req, res) => {
   try {
     const [users, totalResult] = await Promise.all([
@@ -79,7 +83,9 @@ router.post("/login", async (req, res) => {
       return;
     }
 
-    (req.session as Record<string, unknown>).userId = user.id;
+    const session = req.session as Record<string, unknown>;
+    session.userId = user.id;
+    session.role = user.role;
     res.json(sanitize(user));
   } catch (err) {
     req.log.error({ err }, "Error logging in");
@@ -89,7 +95,7 @@ router.post("/login", async (req, res) => {
 
 router.get("/me", async (req, res) => {
   try {
-    const session = req.session as Record<string, unknown>;
+    const session = getSession(req);
     if (!session.userId) {
       res.status(401).json({ error: "Not authenticated" });
       return;
@@ -140,6 +146,77 @@ router.patch("/:id/approve", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Error approving user");
     res.status(400).json({ error: "Invalid request" });
+  }
+});
+
+// PATCH /users/:id/role — owner only: change role of any user
+router.patch("/:id/role", async (req, res) => {
+  try {
+    const session = getSession(req);
+    if (!session.userId || session.role !== "owner") {
+      res.status(403).json({ error: "Solo el owner puede cambiar roles" });
+      return;
+    }
+
+    const id = parseInt(req.params.id);
+    const { role } = req.body as { role: string };
+
+    if (!["admin", "owner", "pending"].includes(role)) {
+      res.status(400).json({ error: "Rol inválido" });
+      return;
+    }
+
+    const [user] = await db
+      .update(usersTable)
+      .set({ role, approved: role !== "pending" })
+      .where(eq(usersTable.id, id))
+      .returning();
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json(sanitize(user));
+  } catch (err) {
+    req.log.error({ err }, "Error changing role");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// PATCH /users/:id/reset-password — owner only: set new password for any user
+router.patch("/:id/reset-password", async (req, res) => {
+  try {
+    const session = getSession(req);
+    if (!session.userId || session.role !== "owner") {
+      res.status(403).json({ error: "Solo el owner puede restablecer contraseñas" });
+      return;
+    }
+
+    const id = parseInt(req.params.id);
+    const { newPassword } = req.body as { newPassword: string };
+
+    if (!newPassword || newPassword.length < 6) {
+      res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const [user] = await db
+      .update(usersTable)
+      .set({ passwordHash })
+      .where(eq(usersTable.id, id))
+      .returning();
+
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error resetting password");
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
