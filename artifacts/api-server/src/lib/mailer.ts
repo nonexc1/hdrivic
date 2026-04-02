@@ -53,15 +53,20 @@ async function getUncachableGmailClient() {
   return google.gmail({ version: "v1", auth: oauth2Client });
 }
 
+function encodeSubject(subject: string): string {
+  return `=?UTF-8?B?${Buffer.from(subject, "utf-8").toString("base64")}?=`;
+}
+
 function makeEmailMessage(to: string, subject: string, htmlBody: string, fromName: string): string {
   const message = [
     `From: ${fromName}`,
     `To: ${to}`,
-    `Subject: ${subject}`,
+    `Subject: ${encodeSubject(subject)}`,
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=UTF-8",
+    "Content-Transfer-Encoding: base64",
     "",
-    htmlBody,
+    Buffer.from(htmlBody, "utf-8").toString("base64"),
   ].join("\r\n");
 
   return Buffer.from(message).toString("base64url");
