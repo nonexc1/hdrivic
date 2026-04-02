@@ -153,13 +153,14 @@ export default function Admin() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid grid-cols-4 w-full max-w-2xl mb-8">
+            <TabsList className={`grid w-full mb-8 ${user.role === "owner" ? "grid-cols-5 max-w-3xl" : "grid-cols-4 max-w-2xl"}`}>
               <TabsTrigger value="dashboard" className="flex items-center gap-2"><LayoutDashboard className="w-4 h-4 hidden sm:block" /> Dashboard</TabsTrigger>
               <TabsTrigger value="properties" className="flex items-center gap-2"><Building2 className="w-4 h-4 hidden sm:block" /> Propiedades</TabsTrigger>
               <TabsTrigger value="leads" className="flex items-center gap-2"><MessageSquare className="w-4 h-4 hidden sm:block" /> Leads</TabsTrigger>
               {user.role === "owner" && (
                 <TabsTrigger value="users" className="flex items-center gap-2"><Users className="w-4 h-4 hidden sm:block" /> Usuarios</TabsTrigger>
               )}
+              <TabsTrigger value="account" className="flex items-center gap-2"><Key className="w-4 h-4 hidden sm:block" /> Mi cuenta</TabsTrigger>
             </TabsList>
 
             <TabsContent value="dashboard">
@@ -179,6 +180,10 @@ export default function Admin() {
                 <UsersTab currentUser={user} />
               </TabsContent>
             )}
+
+            <TabsContent value="account">
+              <AccountTab currentUser={user} />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -615,6 +620,117 @@ function LeadsTab() {
         </Table>
       </CardContent>
     </Card>
+  );
+}
+
+function AccountTab({ currentUser }: { currentUser: any }) {
+  const { toast } = useToast();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const changePassword = useMutation({
+    mutationFn: async () => {
+      const res = await fetch("/api/users/me/change-password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Contraseña actualizada correctamente" });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (e: any) => toast({ variant: "destructive", title: "Error", description: e.message }),
+  });
+
+  const canSubmit =
+    currentPassword.length >= 1 &&
+    newPassword.length >= 6 &&
+    newPassword === confirmPassword &&
+    !changePassword.isPending;
+
+  return (
+    <div className="max-w-lg mx-auto">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle>Mi cuenta</CardTitle>
+              <p className="text-sm text-gray-500 mt-0.5">{currentUser?.email}</p>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-100 grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Nombre</p>
+              <p className="font-medium text-gray-800">{currentUser?.name}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Rol</p>
+              <Badge variant="secondary" className="uppercase text-[10px]">{currentUser?.role}</Badge>
+            </div>
+          </div>
+
+          <div className="border-t pt-5 space-y-4">
+            <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+              <Key className="w-4 h-4 text-primary" /> Cambiar contraseña
+            </h3>
+
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Contraseña actual</label>
+                <Input
+                  type="password"
+                  placeholder="Tu contraseña actual"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Nueva contraseña</label>
+                <Input
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-gray-700">Confirmar nueva contraseña</label>
+                <Input
+                  type="password"
+                  placeholder="Repite la nueva contraseña"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                />
+                {confirmPassword.length > 0 && newPassword !== confirmPassword && (
+                  <p className="text-xs text-red-500">Las contraseñas no coinciden</p>
+                )}
+              </div>
+
+              <Button
+                className="w-full bg-primary hover:bg-primary/90"
+                onClick={() => changePassword.mutate()}
+                disabled={!canSubmit}
+              >
+                {changePassword.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Key className="w-4 h-4 mr-2" />}
+                Actualizar contraseña
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
