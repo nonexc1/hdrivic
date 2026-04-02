@@ -11,6 +11,6 @@ router.use(healthRouter);
 router.use("/properties", propertiesRouter);
 router.use("/leads", leadsRouter);
 router.use("/users", usersRouter);
-router.use("/storage", storageRouter);
+router.use(storageRouter);
 
 export default router;
