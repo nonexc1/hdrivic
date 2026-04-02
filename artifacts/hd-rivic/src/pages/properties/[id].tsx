@@ -144,14 +144,14 @@ export default function PropertyDetail() {
             </div>
           </div>
 
-          {/* Image Gallery */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-12 h-[500px]">
-            <div className="lg:col-span-2 relative rounded-2xl overflow-hidden group bg-gray-100">
+          {/* Image Gallery — full width main image */}
+          <div className="mb-10">
+            <div className="relative rounded-2xl overflow-hidden group bg-gray-100 h-[420px] md:h-[560px] w-full">
               {property.images && property.images.length > 0 ? (
                 <>
-                  <img 
-                    src={property.images[currentImageIndex]} 
-                    alt={property.title} 
+                  <img
+                    src={property.images[currentImageIndex]}
+                    alt={property.title}
                     className="w-full h-full object-cover"
                   />
                   {property.images.length > 1 && (
@@ -172,22 +172,25 @@ export default function PropertyDetail() {
                 <div className="w-full h-full flex items-center justify-center text-gray-400">No hay imágenes disponibles</div>
               )}
             </div>
-            
-            <div className="hidden lg:grid grid-rows-2 gap-4">
-              {property.images && property.images.slice(1, 3).map((img, idx) => (
-                <div key={idx} className="rounded-2xl overflow-hidden cursor-pointer relative" onClick={() => setCurrentImageIndex(idx + 1)}>
-                  <img src={img} alt={`${property.title} - ${idx}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-500" />
-                  {idx === 1 && property.images.length > 3 && (
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-xl">
-                      +{property.images.length - 3} fotos
-                    </div>
-                  )}
-                </div>
-              ))}
-              {(!property.images || property.images.length < 2) && (
-                <div className="rounded-2xl bg-gray-100 flex items-center justify-center row-span-2"></div>
-              )}
-            </div>
+
+            {/* Thumbnail strip */}
+            {property.images && property.images.length > 1 && (
+              <div className="flex gap-3 mt-3 overflow-x-auto pb-1">
+                {property.images.map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentImageIndex(idx)}
+                    className={`shrink-0 w-20 h-14 md:w-24 md:h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                      idx === currentImageIndex
+                        ? "border-secondary scale-105 shadow-md"
+                        : "border-transparent opacity-60 hover:opacity-100"
+                    }`}
+                  >
+                    <img src={img} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
@@ -234,7 +237,7 @@ export default function PropertyDetail() {
 
             {/* Sidebar Contact Form */}
             <div>
-              <div className="sticky top-32">
+              <div className="sticky top-24">
                 <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
                   <div className="bg-primary p-6 text-center">
                     <h3 className="text-xl font-sans font-bold text-white mb-2">Agendar Visita</h3>
