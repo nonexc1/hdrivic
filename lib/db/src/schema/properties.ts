@@ -18,6 +18,7 @@ export const propertiesTable = pgTable("properties", {
   currency: text("currency").notNull().default("USD"),
   status: text("status").notNull(),
   type: text("type").notNull(),
+  ciudad: text("ciudad"),
   district: text("district").notNull(),
   address: text("address").notNull(),
   area: numeric("area", { precision: 10, scale: 2 }),

@@ -15,11 +15,12 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { CIUDADES, getDistritos } from "@/lib/peru-locations";
 
 const propertySchema = z.object({
   title: z.string().min(3),
@@ -28,7 +29,8 @@ const propertySchema = z.object({
   currency: z.enum(["USD", "PEN"]),
   status: z.enum(["venta", "alquiler", "airbnb", "vendido"]),
   type: z.enum(["casa", "departamento", "terreno", "comercial"]),
-  district: z.string().min(2),
+  ciudad: z.string().min(1, "Selecciona una ciudad"),
+  district: z.string().min(1, "Selecciona un distrito"),
   address: z.string().min(5),
   area: z.coerce.number().optional().nullable(),
   bedrooms: z.coerce.number().optional().nullable(),
@@ -297,7 +299,7 @@ function PropertiesTab({ currentUser }: { currentUser: any }) {
               <TableHead>Título</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead>Precio</TableHead>
-              <TableHead>Distrito</TableHead>
+              <TableHead>Ciudad / Distrito</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
@@ -310,7 +312,10 @@ function PropertiesTab({ currentUser }: { currentUser: any }) {
                   <Badge variant="outline" className="uppercase text-[10px]">{property.status}</Badge>
                 </TableCell>
                 <TableCell>{property.currency} {property.price.toLocaleString()}</TableCell>
-                <TableCell>{property.district}</TableCell>
+                <TableCell>
+                  {property.ciudad ? <span className="text-xs text-muted-foreground">{property.ciudad} · </span> : null}
+                  {property.district}
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
                     <PropertyFormDialog mode="edit" property={property} />
@@ -346,6 +351,7 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
     resolver: zodResolver(propertySchema),
     defaultValues: property ? {
       ...property,
+      ciudad: property.ciudad || "",
       images: property.images.join(', '),
       area: property.area || null,
       bedrooms: property.bedrooms || null,
@@ -359,6 +365,7 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
       currency: "USD",
       status: "venta",
       type: "departamento",
+      ciudad: "",
       district: "",
       address: "",
       whatsappNumber: "+51 999 999 999",
@@ -366,6 +373,9 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
       images: "",
     }
   });
+
+  const selectedCiudad = useWatch({ control: form.control, name: "ciudad" });
+  const distritos = getDistritos(selectedCiudad);
 
   const onSubmit = (values: any) => {
     if (mode === "create") {
@@ -475,10 +485,46 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
                 </FormItem>
               )} />
 
+              <FormField control={form.control} name="ciudad" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ciudad</FormLabel>
+                  <Select
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      form.setValue("district", "");
+                    }}
+                    value={field.value}
+                  >
+                    <FormControl><SelectTrigger><SelectValue placeholder="Selecciona ciudad" /></SelectTrigger></FormControl>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {CIUDADES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )} />
+
               <FormField control={form.control} name="district" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Distrito</FormLabel>
-                  <FormControl><Input {...field} /></FormControl>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value}
+                    disabled={!selectedCiudad}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={selectedCiudad ? "Selecciona distrito" : "Primero elige una ciudad"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-60 overflow-y-auto">
+                      {distritos.map((d) => (
+                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )} />
