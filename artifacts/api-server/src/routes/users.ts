@@ -3,6 +3,7 @@ import { db, usersTable } from "@workspace/db";
 import { CreateUserBody, LoginUserBody, ApproveUserParams } from "@workspace/api-zod";
 import { eq, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
+import { sendApprovalEmail } from "../lib/mailer.js";
 
 const router: IRouter = Router();
 
@@ -179,6 +180,8 @@ router.patch("/:id/approve", async (req, res) => {
       res.status(404).json({ error: "User not found" });
       return;
     }
+
+    sendApprovalEmail(user.email, user.name);
 
     res.json(sanitize(user));
   } catch (err) {
