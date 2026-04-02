@@ -135,10 +135,10 @@ export default function PropertyDetail() {
             </div>
             
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <h1 className="text-3xl md:text-5xl font-serif font-bold text-primary leading-tight flex-1">
+              <h1 className="text-3xl md:text-5xl font-sans font-bold text-primary leading-tight flex-1">
                 {property.title}
               </h1>
-              <div className="text-3xl md:text-4xl font-serif font-bold text-secondary shrink-0">
+              <div className="text-3xl md:text-4xl font-sans font-bold text-secondary shrink-0">
                 {formatPrice(property.price, property.currency)}
               </div>
             </div>
@@ -225,7 +225,7 @@ export default function PropertyDetail() {
               </div>
 
               <div className="prose max-w-none">
-                <h3 className="text-2xl font-serif font-bold text-primary mb-4">Descripción de la Propiedad</h3>
+                <h3 className="text-2xl font-sans font-bold text-primary mb-4">Descripción de la Propiedad</h3>
                 <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
                   {property.description}
                 </div>
@@ -237,7 +237,7 @@ export default function PropertyDetail() {
               <div className="sticky top-32">
                 <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
                   <div className="bg-primary p-6 text-center">
-                    <h3 className="text-xl font-serif font-bold text-white mb-2">Agendar Visita</h3>
+                    <h3 className="text-xl font-sans font-bold text-white mb-2">Agendar Visita</h3>
                     <p className="text-primary-foreground/80 text-sm">Déjanos tus datos y un asesor se contactará contigo a la brevedad.</p>
                   </div>
                   <CardContent className="p-6">

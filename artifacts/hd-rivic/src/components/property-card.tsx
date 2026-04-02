@@ -97,7 +97,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
 
             {/* Price Badge */}
             <div className="absolute bottom-4 right-4">
-              <div className="bg-primary/90 backdrop-blur-md text-white px-4 py-2 rounded shadow-lg font-serif font-bold text-lg">
+              <div className="bg-primary/90 backdrop-blur-md text-white px-4 py-2 rounded shadow-lg font-sans font-bold text-lg">
                 {formatPrice(property.price, property.currency)}
               </div>
             </div>
@@ -121,7 +121,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
               </Tooltip>
             </div>
 
-            <h3 className="font-serif text-xl font-bold text-primary mb-2 line-clamp-1 group-hover:text-secondary transition-colors">
+            <h3 className="font-sans text-xl font-bold text-primary mb-2 line-clamp-1 group-hover:text-secondary transition-colors">
               {property.title}
             </h3>
 
