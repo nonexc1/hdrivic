@@ -77,7 +77,7 @@ export default function Home() {
           >
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-sans font-bold text-white mb-6 leading-tight drop-shadow-lg">
               Construyendo tu Futuro, <br/>
-              <span className="text-secondary italic">Encontrando tu Lugar.</span>
+              <span className="text-white/80 font-light italic">Encontrando tu Lugar.</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-200 mb-8 max-w-2xl mx-auto font-light">
               Exclusividad, confianza y rentabilidad. HD RIVIC GLOBAL S.A.C. te acompaña en la decisión más importante de tu vida.
