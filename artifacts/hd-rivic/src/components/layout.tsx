@@ -1,8 +1,150 @@
 import { Link, useLocation } from "wouter";
-import { useState, useEffect } from "react";
-import { Menu, X, Phone, Mail, MapPin, Instagram, Facebook, Linkedin } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Menu, X, Phone, Mail, MapPin, Instagram, Facebook, Linkedin, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGetCurrentUser, useLogoutUser } from "@workspace/api-client-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+type UnreadLead = {
+  id: number;
+  name: string;
+  type: string;
+  propertyId: number | null;
+  createdAt: string;
+};
+
+function NotificationBell({ isTransparent }: { isTransparent: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [, navigate] = useLocation();
+  const qc = useQueryClient();
+
+  const { data } = useQuery({
+    queryKey: ["leads-unread"],
+    queryFn: async () => {
+      const res = await fetch("/api/leads/unread", { credentials: "include" });
+      if (!res.ok) return { leads: [] as UnreadLead[] };
+      return res.json() as Promise<{ leads: UnreadLead[] }>;
+    },
+    refetchInterval: 30000,
+  });
+
+  const leads = data?.leads ?? [];
+  const count = leads.length;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const markRead = async (id: number) => {
+    await fetch(`/api/leads/${id}/read`, { method: "PATCH", credentials: "include" });
+    qc.invalidateQueries({ queryKey: ["leads-unread"] });
+  };
+
+  const handleClick = async (lead: UnreadLead) => {
+    await markRead(lead.id);
+    setOpen(false);
+    navigate("/admin?tab=leads");
+  };
+
+  const handleMarkAllRead = async () => {
+    await Promise.all(leads.map((l) => markRead(l.id)));
+    setOpen(false);
+  };
+
+  const TYPE_LABELS: Record<string, string> = {
+    comprar: "Quiere comprar",
+    alquilar: "Quiere alquilar",
+    vender: "Quiere vender",
+    agendar_visita: "Agenda visita",
+    informacion: "Pide información",
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={`relative flex items-center justify-center w-9 h-9 rounded-full transition-colors ${
+          isTransparent
+            ? "hover:bg-white/20 text-white"
+            : "hover:bg-gray-100 text-primary"
+        }`}
+        aria-label="Notificaciones"
+      >
+        <Bell className="w-5 h-5" />
+        {count > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-secondary text-white text-[10px] font-bold flex items-center justify-center px-1 leading-none">
+            {count > 99 ? "99+" : count}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-border z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-gray-50">
+            <span className="text-sm font-bold text-primary">Notificaciones</span>
+            {count > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs text-secondary hover:underline font-medium"
+              >
+                Marcar todo como leído
+              </button>
+            )}
+          </div>
+
+          {count === 0 ? (
+            <div className="py-8 text-center text-sm text-gray-400">
+              Sin notificaciones nuevas
+            </div>
+          ) : (
+            <div className="max-h-80 overflow-y-auto divide-y divide-border">
+              {leads.map((lead) => (
+                <button
+                  key={lead.id}
+                  onClick={() => handleClick(lead)}
+                  className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex items-start gap-3 group"
+                >
+                  <div className="w-8 h-8 rounded-full bg-secondary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Bell className="w-3.5 h-3.5 text-secondary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-primary truncate">
+                      Nuevo lead: {lead.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {TYPE_LABELS[lead.type] ?? lead.type}
+                      {lead.propertyId ? ` · Prop. #${lead.propertyId}` : ""}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {new Date(lead.createdAt).toLocaleDateString("es-PE", {
+                        day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <span className="w-2 h-2 rounded-full bg-secondary shrink-0 mt-2" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t border-border px-4 py-2.5 bg-gray-50">
+            <button
+              onClick={() => { setOpen(false); navigate("/admin?tab=leads"); }}
+              className="text-xs text-secondary hover:underline font-medium w-full text-center"
+            >
+              Ver todos los leads →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -11,6 +153,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const { data: user } = useGetCurrentUser();
   const logout = useLogoutUser();
+
+  const isAdmin = !!user?.approved && (user.role === "admin" || user.role === "owner");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,7 +177,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     { href: "/propiedades", label: "Propiedades" },
   ];
 
-  if (user?.approved && (user.role === "admin" || user.role === "owner")) {
+  if (isAdmin) {
     navLinks.push({ href: "/admin", label: "Panel Admin" });
   }
 
@@ -81,7 +225,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               ))}
 
               {user ? (
-                <div className="flex items-center gap-4 ml-4">
+                <div className="flex items-center gap-3 ml-4">
+                  {isAdmin && <NotificationBell isTransparent={isTransparent} />}
                   <span className={`text-sm font-medium ${isTransparent ? "text-white/80" : "text-muted-foreground"}`}>
                     {user.name}
                   </span>
@@ -108,7 +253,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Mobile menu button */}
-            <div className="md:hidden flex items-center">
+            <div className="md:hidden flex items-center gap-2">
+              {isAdmin && <NotificationBell isTransparent={isTransparent} />}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className={`${isTransparent ? "text-white" : "text-primary"} hover:text-secondary focus:outline-none`}
