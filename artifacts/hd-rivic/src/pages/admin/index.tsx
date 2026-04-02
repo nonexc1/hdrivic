@@ -3,8 +3,9 @@ import { useGetCurrentUser, useGetPropertyStats, useListProperties, useListLeads
 import { useUpload } from "@workspace/object-storage-web";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState, useRef } from "react";
-import { useMutation, useQueryClient as useQC } from "@tanstack/react-query";
-import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon, ShieldCheck, Key } from "lucide-react";
+import { useMutation, useQuery, useQueryClient as useQC } from "@tanstack/react-query";
+import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon, ShieldCheck, Key, Bell, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -127,6 +128,19 @@ export default function Admin() {
   const { data: user, isLoading: isUserLoading } = useGetCurrentUser();
   const [activeTab, setActiveTab] = useState("dashboard");
 
+  const { data: unreadData, refetch: refetchUnread } = useQuery({
+    queryKey: ["leads-unread-count"],
+    queryFn: async () => {
+      const res = await fetch("/api/leads/unread-count", { credentials: "include" });
+      if (!res.ok) return { count: 0 };
+      return res.json() as Promise<{ count: number }>;
+    },
+    refetchInterval: 30000,
+    enabled: !!user,
+  });
+
+  const unreadCount = unreadData?.count ?? 0;
+
   useEffect(() => {
     if (!isUserLoading) {
       if (!user || !user.approved || (user.role !== "admin" && user.role !== "owner")) {
@@ -152,13 +166,32 @@ export default function Admin() {
               <h1 className="text-3xl font-serif font-bold text-primary">Panel Administrativo</h1>
               <p className="text-gray-500">Bienvenido, {user.name} ({user.role})</p>
             </div>
+            <button
+              onClick={() => { setActiveTab("leads"); refetchUnread(); }}
+              className="relative flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-white hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <Bell className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-primary hidden sm:inline">Notificaciones</span>
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] rounded-full bg-secondary text-white text-xs font-bold flex items-center justify-center px-1">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </button>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className={`grid w-full mb-8 ${user.role === "owner" ? "grid-cols-5 max-w-3xl" : "grid-cols-4 max-w-2xl"}`}>
               <TabsTrigger value="dashboard" className="flex items-center gap-2"><LayoutDashboard className="w-4 h-4 hidden sm:block" /> Dashboard</TabsTrigger>
               <TabsTrigger value="properties" className="flex items-center gap-2"><Building2 className="w-4 h-4 hidden sm:block" /> Propiedades</TabsTrigger>
-              <TabsTrigger value="leads" className="flex items-center gap-2"><MessageSquare className="w-4 h-4 hidden sm:block" /> Leads</TabsTrigger>
+              <TabsTrigger value="leads" className="flex items-center gap-2 relative">
+                <MessageSquare className="w-4 h-4 hidden sm:block" /> Leads
+                {unreadCount > 0 && (
+                  <span className="ml-1 min-w-[18px] h-[18px] rounded-full bg-secondary text-white text-[10px] font-bold flex items-center justify-center px-1">
+                    {unreadCount}
+                  </span>
+                )}
+              </TabsTrigger>
               {user.role === "owner" && (
                 <TabsTrigger value="users" className="flex items-center gap-2"><Users className="w-4 h-4 hidden sm:block" /> Usuarios</TabsTrigger>
               )}
@@ -174,7 +207,7 @@ export default function Admin() {
             </TabsContent>
 
             <TabsContent value="leads">
-              <LeadsTab />
+              <LeadsTab onLeadRead={refetchUnread} />
             </TabsContent>
 
             {user.role === "owner" && (
@@ -615,17 +648,88 @@ function DeletePropertyDialog({ propertyId }: { propertyId: number }) {
   );
 }
 
-function LeadsTab() {
+const LEAD_STATUS_COLORS: Record<string, string> = {
+  pendiente: "bg-yellow-100 text-yellow-800",
+  atendido: "bg-blue-100 text-blue-800",
+  vendido: "bg-green-100 text-green-800",
+  rentado: "bg-purple-100 text-purple-800",
+  comprado: "bg-emerald-100 text-emerald-800",
+};
+
+const LEAD_STATUS_OPTIONS = [
+  { value: "pendiente", label: "Pendiente" },
+  { value: "atendido", label: "Atendido" },
+  { value: "vendido", label: "Vendido" },
+  { value: "rentado", label: "Rentado" },
+  { value: "comprado", label: "Comprado" },
+];
+
+function LeadsTab({ onLeadRead }: { onLeadRead?: () => void }) {
   const { data: leadsData, isLoading } = useListLeads();
+  const qc = useQC();
+
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      const res = await fetch(`/api/leads/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: getListLeadsQueryKey() }); },
+  });
+
+  const markRead = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/leads/${id}/read`, {
+        method: "PATCH",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Error");
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getListLeadsQueryKey() });
+      onLeadRead?.();
+    },
+  });
+
+  const handleExport = () => {
+    if (!leadsData?.leads) return;
+    const rows = leadsData.leads.map((lead) => ({
+      ID: lead.id,
+      Fecha: new Date(lead.createdAt).toLocaleDateString("es-PE"),
+      Nombre: lead.name,
+      Email: lead.email,
+      Teléfono: lead.phone,
+      Tipo: lead.type.replace("_", " "),
+      "Propiedad ID": lead.propertyId ?? "",
+      Estado: lead.status,
+      Mensaje: lead.message,
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Leads");
+    XLSX.writeFile(wb, `leads_hdrivic_${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
 
   if (isLoading) return <div className="py-12 flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Leads y Contactos</CardTitle>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle>Leads y Contactos ({leadsData?.total ?? 0})</CardTitle>
+          <Button variant="outline" size="sm" onClick={handleExport} className="flex items-center gap-2 self-start sm:self-auto">
+            <Download className="w-4 h-4" />
+            Exportar Excel
+          </Button>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -633,33 +737,62 @@ function LeadsTab() {
               <TableHead>Nombre</TableHead>
               <TableHead>Contacto</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Propiedad ID</TableHead>
+              <TableHead>Propiedad</TableHead>
+              <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {leadsData?.leads.map((lead) => (
-              <TableRow key={lead.id}>
-                <TableCell>{new Date(lead.createdAt).toLocaleDateString('es-PE')}</TableCell>
+              <TableRow
+                key={lead.id}
+                className={!lead.isRead ? "bg-blue-50/60 font-medium" : ""}
+                onClick={() => { if (!lead.isRead) markRead.mutate(lead.id); }}
+              >
+                <TableCell className="whitespace-nowrap text-xs text-gray-500">
+                  {new Date(lead.createdAt).toLocaleDateString("es-PE")}
+                  {!lead.isRead && <span className="ml-2 inline-block w-2 h-2 rounded-full bg-secondary" />}
+                </TableCell>
                 <TableCell className="font-medium">{lead.name}</TableCell>
                 <TableCell>
                   <div className="text-sm">{lead.email}</div>
                   <div className="text-sm text-gray-500">{lead.phone}</div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="uppercase text-[10px]">{lead.type.replace('_', ' ')}</Badge>
+                  <Badge variant="outline" className="uppercase text-[10px]">{lead.type.replace("_", " ")}</Badge>
                 </TableCell>
                 <TableCell>
                   {lead.propertyId ? (
                     <Link href={`/propiedades/${lead.propertyId}`} className="text-primary hover:underline font-medium">
                       #{lead.propertyId}
                     </Link>
-                  ) : '-'}
+                  ) : "-"}
+                </TableCell>
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Select
+                    value={lead.status ?? "pendiente"}
+                    onValueChange={(val) => updateStatus.mutate({ id: lead.id, status: val })}
+                  >
+                    <SelectTrigger className="h-7 text-xs w-32 border-0 shadow-none p-0">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${LEAD_STATUS_COLORS[lead.status ?? "pendiente"]}`}>
+                        {LEAD_STATUS_OPTIONS.find(o => o.value === (lead.status ?? "pendiente"))?.label}
+                      </span>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {LEAD_STATUS_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-sm">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase ${LEAD_STATUS_COLORS[opt.value]}`}>
+                            {opt.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </TableCell>
               </TableRow>
             ))}
             {leadsData?.leads.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-gray-500">No hay leads registrados</TableCell>
+                <TableCell colSpan={6} className="text-center py-6 text-gray-500">No hay leads registrados</TableCell>
               </TableRow>
             )}
           </TableBody>

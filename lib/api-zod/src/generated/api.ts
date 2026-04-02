@@ -316,6 +316,8 @@ export const CreateLeadBody = zod.object({
 /**
  * @summary List all leads (admin only)
  */
+export const LeadStatus = zod.enum(["pendiente", "atendido", "vendido", "rentado", "comprado"]);
+
 export const ListLeadsResponse = zod.object({
   leads: zod.array(
     zod.object({
@@ -332,6 +334,8 @@ export const ListLeadsResponse = zod.object({
         "informacion",
       ]),
       propertyId: zod.number().nullish(),
+      status: LeadStatus.default("pendiente"),
+      isRead: zod.boolean().default(false),
       createdAt: zod.coerce.date(),
     }),
   ),
