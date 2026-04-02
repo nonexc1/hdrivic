@@ -64,6 +64,23 @@ router.get("/unread-count", async (req, res) => {
   }
 });
 
+router.get("/unread", async (req, res) => {
+  try {
+    const session = getSession(req);
+    if (!session.userId) return res.status(401).json({ error: "Not authenticated" });
+    const leads = await db
+      .select()
+      .from(leadsTable)
+      .where(eq(leadsTable.isRead, false))
+      .orderBy(desc(leadsTable.createdAt))
+      .limit(20);
+    res.json({ leads });
+  } catch (err) {
+    req.log.error({ err }, "Error fetching unread leads");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const session = getSession(req);

@@ -4,7 +4,7 @@ import { useUpload } from "@workspace/object-storage-web";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState, useRef } from "react";
 import { useMutation, useQuery, useQueryClient as useQC } from "@tanstack/react-query";
-import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon, ShieldCheck, Key, Bell, Download } from "lucide-react";
+import { Loader2, LayoutDashboard, Building2, Users, MessageSquare, Plus, Edit, Trash2, CheckCircle, XCircle, Upload, X, ImageIcon, ShieldCheck, Key, Download } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -124,22 +124,38 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (v: st
 }
 
 export default function Admin() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { data: user, isLoading: isUserLoading } = useGetCurrentUser();
-  const [activeTab, setActiveTab] = useState("dashboard");
+
+  const initialTab = (() => {
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const params = new URLSearchParams(search);
+    return params.get("tab") ?? "dashboard";
+  })();
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [location]);
 
   const { data: unreadData, refetch: refetchUnread } = useQuery({
-    queryKey: ["leads-unread-count"],
+    queryKey: ["leads-unread"],
     queryFn: async () => {
-      const res = await fetch("/api/leads/unread-count", { credentials: "include" });
-      if (!res.ok) return { count: 0 };
-      return res.json() as Promise<{ count: number }>;
+      const res = await fetch("/api/leads/unread", { credentials: "include" });
+      if (!res.ok) return { leads: [] };
+      return res.json() as Promise<{ leads: unknown[] }>;
     },
     refetchInterval: 30000,
     enabled: !!user,
   });
 
-  const unreadCount = unreadData?.count ?? 0;
+  const unreadCount = (unreadData?.leads ?? []).length;
 
   useEffect(() => {
     if (!isUserLoading) {
@@ -166,18 +182,6 @@ export default function Admin() {
               <h1 className="text-3xl font-serif font-bold text-primary">Panel Administrativo</h1>
               <p className="text-gray-500">Bienvenido, {user.name} ({user.role})</p>
             </div>
-            <button
-              onClick={() => { setActiveTab("leads"); refetchUnread(); }}
-              className="relative flex items-center gap-2 px-4 py-2 rounded-xl border border-border bg-white hover:bg-gray-50 transition-colors shadow-sm"
-            >
-              <Bell className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-primary hidden sm:inline">Notificaciones</span>
-              {unreadCount > 0 && (
-                <span className="absolute -top-2 -right-2 min-w-[22px] h-[22px] rounded-full bg-secondary text-white text-xs font-bold flex items-center justify-center px-1">
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-            </button>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
