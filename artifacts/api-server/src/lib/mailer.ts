@@ -11,10 +11,10 @@ async function getCredentials() {
     : null;
 
   if (!xReplitToken) {
-    throw new Error("X-Replit-Token not found for repl/depl");
+    throw new Error("X-Replit-Token not found (REPL_IDENTITY and WEB_REPL_RENEWAL are both missing)");
   }
 
-  connectionSettings = await fetch(
+  const response = await fetch(
     "https://" + hostname + "/api/v2/connection?include_secrets=true&connector_names=resend",
     {
       headers: {
@@ -22,17 +22,22 @@ async function getCredentials() {
         "X-Replit-Token": xReplitToken,
       },
     }
-  )
-    .then((res) => res.json())
-    .then((data) => data.items?.[0]);
+  );
 
-  if (!connectionSettings || !connectionSettings.settings.api_key) {
-    throw new Error("Resend not connected");
+  const data = await response.json();
+  connectionSettings = data.items?.[0];
+
+  if (!connectionSettings?.settings?.api_key) {
+    throw new Error("Resend not connected — api_key missing from connection settings");
   }
+
+  // fromEmail from connection settings may be blank; fall back to Resend's test sender
+  const fromEmail =
+    connectionSettings.settings.from_email || "HD RIVIC GLOBAL <onboarding@resend.dev>";
 
   return {
     apiKey: connectionSettings.settings.api_key as string,
-    fromEmail: (connectionSettings.settings.from_email as string) || "HD RIVIC GLOBAL <noreply@hdrivic.com>",
+    fromEmail,
   };
 }
 
@@ -44,7 +49,10 @@ async function getUncachableResendClient() {
 export async function sendApprovalEmail(to: string, name: string) {
   try {
     const { client, fromEmail } = await getUncachableResendClient();
-    await client.emails.send({
+
+    console.log(`[mailer] Sending approval email to ${to} from ${fromEmail}`);
+
+    const result = await client.emails.send({
       from: fromEmail,
       to,
       subject: "¡Tu cuenta en HD RIVIC GLOBAL ha sido aprobada!",
@@ -94,7 +102,13 @@ export async function sendApprovalEmail(to: string, name: string) {
         </div>
       `,
     });
+
+    if (result.error) {
+      console.error("[mailer] Resend API error:", result.error);
+    } else {
+      console.log("[mailer] Email sent successfully, id:", result.data?.id);
+    }
   } catch (err) {
-    console.error("Failed to send approval email:", err);
+    console.error("[mailer] Failed to send approval email:", err);
   }
 }
