@@ -75,7 +75,7 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-center max-w-4xl mx-auto mb-12"
           >
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight drop-shadow-lg">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-sans font-bold text-white mb-6 leading-tight drop-shadow-lg">
               Construyendo tu Futuro, <br/>
               <span className="text-secondary italic">Encontrando tu Lugar.</span>
             </h1>
@@ -154,7 +154,7 @@ export default function Home() {
           <div className="flex justify-between items-end mb-12">
             <div>
               <h2 className="text-sm font-bold text-secondary uppercase tracking-widest mb-2">Selección Exclusiva</h2>
-              <h3 className="text-3xl md:text-4xl font-serif font-bold text-primary">Propiedades Destacadas</h3>
+              <h3 className="text-3xl md:text-4xl font-sans font-bold text-primary">Propiedades Destacadas</h3>
             </div>
             <Link href="/propiedades" className="hidden md:inline-flex items-center text-primary font-medium hover:text-secondary transition-colors">
               Ver todas las propiedades
@@ -195,7 +195,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="text-sm font-bold text-secondary uppercase tracking-widest mb-2">Nuestros Servicios</h2>
-            <h3 className="text-3xl md:text-4xl font-serif font-bold text-primary mb-6">Soluciones Inmobiliarias Integrales</h3>
+            <h3 className="text-3xl md:text-4xl font-sans font-bold text-primary mb-6">Soluciones Inmobiliarias Integrales</h3>
             <p className="text-gray-600">
               Ofrecemos un servicio 360° para garantizar que su experiencia inmobiliaria sea fluida, segura y rentable.
             </p>
@@ -214,7 +214,7 @@ export default function Home() {
                 <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform duration-300">
                   {service.icon}
                 </div>
-                <h4 className="text-xl font-serif font-bold text-primary mb-4">{service.title}</h4>
+                <h4 className="text-xl font-sans font-bold text-primary mb-4">{service.title}</h4>
                 <p className="text-gray-600 text-sm leading-relaxed">{service.description}</p>
               </motion.div>
             ))}
@@ -245,7 +245,7 @@ export default function Home() {
               viewport={{ once: true }}
             >
               <h2 className="text-sm font-bold text-secondary uppercase tracking-widest mb-2">Sobre Nosotros</h2>
-              <h3 className="text-3xl md:text-5xl font-serif font-bold mb-6 leading-tight">Excelencia en Cada Transacción</h3>
+              <h3 className="text-3xl md:text-5xl font-sans font-bold mb-6 leading-tight">Excelencia en Cada Transacción</h3>
               
               <p className="text-gray-300 mb-6 text-lg font-light leading-relaxed">
                 En HD RIVIC GLOBAL S.A.C., no solo vendemos propiedades; construimos relaciones basadas en la confianza, la transparencia y los resultados.
@@ -283,7 +283,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="py-24 bg-gray-50 text-center">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-5xl font-serif font-bold text-primary mb-6">¿Listo para el Siguiente Paso?</h2>
+          <h2 className="text-3xl md:text-5xl font-sans font-bold text-primary mb-6">¿Listo para el Siguiente Paso?</h2>
           <p className="text-xl text-gray-600 mb-10 font-light">
             Un asesor especializado de HD RIVIC está listo para escuchar sus necesidades y presentarle las mejores opciones del mercado.
           </p>

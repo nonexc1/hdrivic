@@ -118,7 +118,7 @@ export default function Properties() {
     <Layout>
       <div className="bg-primary pt-32 pb-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-serif font-bold text-white mb-4">Catálogo de Propiedades</h1>
+          <h1 className="text-4xl font-sans font-bold text-white mb-4">Catálogo de Propiedades</h1>
           <p className="text-gray-300">Encuentra la propiedad ideal que se ajuste a tus necesidades y estilo de vida.</p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function Properties() {
           {/* Sidebar Filters (Desktop) */}
           <div className="hidden md:block w-64 shrink-0">
             <div className="sticky top-32 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-              <h2 className="text-lg font-serif font-bold text-primary mb-6 flex items-center">
+              <h2 className="text-lg font-sans font-bold text-primary mb-6 flex items-center">
                 <SlidersHorizontal className="w-5 h-5 mr-2 text-secondary" />
                 Filtros
               </h2>
@@ -153,7 +153,7 @@ export default function Properties() {
                 </SheetTrigger>
                 <SheetContent side="left">
                   <SheetHeader className="mb-6">
-                    <SheetTitle className="font-serif">Filtros de Búsqueda</SheetTitle>
+                    <SheetTitle className="font-sans">Filtros de Búsqueda</SheetTitle>
                   </SheetHeader>
                   <FilterContent />
                 </SheetContent>
