@@ -118,6 +118,44 @@ router.get("/me", async (req, res) => {
   }
 });
 
+// PATCH /users/me/change-password — any authenticated user: change their own password
+router.patch("/me/change-password", async (req, res) => {
+  try {
+    const session = getSession(req);
+    if (!session.userId) {
+      res.status(401).json({ error: "No autenticado" });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body as { currentPassword: string; newPassword: string };
+
+    if (!currentPassword || !newPassword || newPassword.length < 6) {
+      res.status(400).json({ error: "La nueva contraseña debe tener al menos 6 caracteres" });
+      return;
+    }
+
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, session.userId as number));
+    if (!user) {
+      res.status(404).json({ error: "Usuario no encontrado" });
+      return;
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      res.status(400).json({ error: "La contraseña actual es incorrecta" });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await db.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, user.id));
+
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error changing own password");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.post("/logout", async (req, res) => {
   try {
     req.session.destroy(() => {});
