@@ -164,6 +164,15 @@ export default function PropertyDetail() {
                   {property.tag}
                 </Badge>
               )}
+              {isRentado && (
+                <button
+                  onClick={() => setNotifyOpen(true)}
+                  className="inline-flex items-center gap-1.5 bg-secondary text-white text-xs font-bold px-3 py-1.5 rounded-full shadow hover:bg-secondary/90 transition-colors uppercase tracking-wider"
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  Notificarme cuando esté disponible
+                </button>
+              )}
               <span className="text-gray-500 flex items-center text-sm ml-auto">
                 <MapPin className="w-4 h-4 mr-1" />
                 {property.address}, {property.district}
@@ -274,22 +283,23 @@ export default function PropertyDetail() {
             <div>
               <div className="sticky top-24">
                 {isRentado ? (
-                  /* Rentado state: show notify card */
-                  <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
-                    <div className="bg-gray-700 p-6 text-center">
-                      <h3 className="text-xl font-sans font-bold text-white mb-2">Propiedad Alquilada</h3>
-                      <p className="text-white/70 text-sm">Esta propiedad está actualmente alquilada. Puedes suscribirte para recibir una notificación cuando vuelva a estar disponible.</p>
+                  /* Rentado state: compact notice + notify button */
+                  <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center space-y-4">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto">
+                      <Bell className="w-6 h-6 text-gray-500" />
                     </div>
-                    <CardContent className="p-6">
-                      <Button
-                        className="w-full h-12 bg-secondary hover:bg-secondary/90 text-white font-bold"
-                        onClick={() => setNotifyOpen(true)}
-                      >
-                        <Bell className="w-5 h-5 mr-2" />
-                        Notificarme cuando esté disponible
-                      </Button>
-                    </CardContent>
-                  </Card>
+                    <div>
+                      <h3 className="font-sans font-bold text-gray-700 text-lg mb-1">Propiedad alquilada</h3>
+                      <p className="text-gray-500 text-sm leading-relaxed">Esta propiedad está actualmente ocupada. Regístrate y te avisamos en cuanto esté disponible.</p>
+                    </div>
+                    <Button
+                      className="w-full h-12 bg-secondary hover:bg-secondary/90 text-white font-bold"
+                      onClick={() => setNotifyOpen(true)}
+                    >
+                      <Bell className="w-5 h-5 mr-2" />
+                      Notificarme cuando esté disponible
+                    </Button>
+                  </div>
                 ) : isVendido ? (
                   /* Vendido state: show sold card */
                   <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
