@@ -189,7 +189,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Top Bar */}
       <div className="bg-primary text-white text-xs py-2 px-4 md:px-8 hidden md:flex justify-between items-center z-50 relative">
         <div className="flex space-x-6 font-medium tracking-wide">
-          <span className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-secondary" /> +51 924 250 051</span>
+          <span className="flex items-center gap-1.5"><Phone className="w-3 h-3 text-secondary" /> +51 924 250 021</span>
           <span className="flex items-center gap-1.5"><Mail className="w-3 h-3 text-secondary" /> contacto@hdrivic.com</span>
         </div>
         <div className="flex space-x-4">
@@ -359,7 +359,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 </li>
                 <li className="flex items-center gap-3">
                   <Phone className="w-4 h-4 text-secondary shrink-0" />
-                  <span className="text-white/60 text-sm font-light">+51 924 250 051</span>
+                  <span className="text-white/60 text-sm font-light">+51 924 250 021</span>
                 </li>
                 <li className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-secondary shrink-0" />
@@ -382,7 +382,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Floating WhatsApp */}
       <a
-        href="https://wa.me/51924250051"
+        href="https://wa.me/51924250021"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-xl hover:bg-[#1ebe57] transition-colors z-50"
