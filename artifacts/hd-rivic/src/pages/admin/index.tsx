@@ -125,7 +125,8 @@ function ImageUploadField({ value, onChange }: { value: string; onChange: (v: st
 
 export default function Admin() {
   const [location, setLocation] = useLocation();
-  const { data: user, isLoading: isUserLoading } = useGetCurrentUser();
+  const { data: user, isLoading: isUserLoading, error: userError } = useGetCurrentUser();
+  const { toast } = useToast();
 
   const initialTab = (() => {
     const search = typeof window !== "undefined" ? window.location.search : "";
@@ -148,22 +149,30 @@ export default function Admin() {
     queryKey: ["leads-unread"],
     queryFn: async () => {
       const res = await fetch("/api/leads/unread", { credentials: "include" });
+      if (res.status === 401) throw Object.assign(new Error("Unauthorized"), { status: 401 });
       if (!res.ok) return { leads: [] };
       return res.json() as Promise<{ leads: unknown[] }>;
     },
     refetchInterval: 30000,
     enabled: !!user,
+    retry: false,
   });
 
   const unreadCount = (unreadData?.leads ?? []).length;
 
   useEffect(() => {
     if (!isUserLoading) {
+      const is401 = (userError as any)?.status === 401;
+      if (is401) {
+        toast({ title: "Sesión expirada", description: "Por favor inicia sesión nuevamente.", variant: "destructive" });
+        setLocation("/login");
+        return;
+      }
       if (!user || !user.approved || (user.role !== "admin" && user.role !== "owner")) {
         setLocation("/login");
       }
     }
-  }, [user, isUserLoading, setLocation]);
+  }, [user, isUserLoading, userError, setLocation, toast]);
 
   if (isUserLoading || !user) {
     return (
@@ -322,24 +331,26 @@ function PropertyStatusSelect({ propertyId, currentStatus }: { propertyId: numbe
   const queryClient = useQC();
   const { toast } = useToast();
 
-  const mutation = useMutation({
-    mutationFn: async (newStatus: string) => {
-      const res = await fetch(`/api/properties/${propertyId}/status`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus }),
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(await res.text());
-      return res.json();
+  const tagForStatus = (s: string): string | null => {
+    if (s === "vendido") return "Vendido";
+    return null;
+  };
+
+  const { mutate, isPending } = useUpdateProperty({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListPropertiesQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetPropertyStatsQueryKey() });
+        toast({ title: "Estado actualizado correctamente" });
+      },
+      onError: (err: any) => {
+        if (err?.status === 401) return;
+        toast({ title: "Error al actualizar el estado", variant: "destructive" });
+      },
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: getListPropertiesQueryKey() });
-      queryClient.invalidateQueries({ queryKey: getGetPropertyStatsQueryKey() });
-      toast({ title: "Estado actualizado correctamente" });
-    },
-    onError: () => toast({ title: "Error al actualizar el estado", variant: "destructive" }),
   });
+
+  const mutation = { mutate: (newStatus: string) => mutate({ id: propertyId, data: { status: newStatus as any, tag: tagForStatus(newStatus) as any } }), isPending };
 
   const opt = PROPERTY_STATUS_OPTIONS.find((o) => o.value === currentStatus);
 

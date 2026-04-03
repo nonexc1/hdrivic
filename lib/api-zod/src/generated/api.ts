@@ -230,7 +230,7 @@ export const UpdatePropertyBody = zod.object({
   description: zod.string().optional(),
   price: zod.number().optional(),
   currency: zod.enum(["USD", "PEN"]).optional(),
-  status: zod.enum(["venta", "alquiler", "airbnb", "vendido"]).optional(),
+  status: zod.enum(["venta", "alquiler", "airbnb", "vendido", "rentado"]).optional(),
   type: zod.enum(["casa", "departamento", "terreno", "comercial"]).optional(),
   ciudad: zod.string().nullish(),
   district: zod.string().optional(),
