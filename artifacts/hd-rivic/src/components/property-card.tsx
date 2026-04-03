@@ -47,7 +47,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
   };
 
   const whatsappUrl = useMemo(() => {
-    const num = (property.whatsappNumber ?? "51924250051").replace(/[\s+\-()]/g, "");
+    const num = (property.whatsappNumber ?? "51924250021").replace(/[\s+\-()]/g, "");
     const message = encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`);
     return `https://wa.me/${num}?text=${message}`;
   }, [property.id, property.title, property.whatsappNumber]);

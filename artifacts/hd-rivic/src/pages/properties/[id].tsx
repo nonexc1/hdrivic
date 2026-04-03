@@ -122,9 +122,9 @@ export default function PropertyDetail() {
     }).format(price);
   };
 
-  const waNumber = (property.whatsappNumber ?? "51924250051").replace(/[\s+\-()]/g, "");
+  const waNumber = (property.whatsappNumber ?? "51924250021").replace(/[\s+\-()]/g, "");
   const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${id})`)}`;
-  const whatsappVendidoUrl = `https://wa.me/51924250051?text=${encodeURIComponent("Hola, busco propiedades similares a las que tienen disponibles")}`;
+  const whatsappVendidoUrl = `https://wa.me/51924250021?text=${encodeURIComponent("Hola, busco propiedades similares a las que tienen disponibles")}`;
 
   const statusColorMap: Record<string, string> = {
     venta: "bg-blue-100 text-blue-800 border-blue-200",
