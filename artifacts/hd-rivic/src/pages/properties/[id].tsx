@@ -307,13 +307,37 @@ export default function PropertyDetail() {
                     </CardContent>
                   </Card>
                 ) : (
-                  /* Available: show contact form */
-                  <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
-                    <div className="bg-primary p-6 text-center">
-                      <h3 className="text-xl font-sans font-bold text-white mb-2">Agendar Visita</h3>
-                      <p className="text-primary-foreground/80 text-sm">Déjanos tus datos y un asesor se contactará contigo a la brevedad.</p>
+                  /* Available: WhatsApp hero + form */
+                  <div className="space-y-4">
+                    {/* WhatsApp — Primary CTA */}
+                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
+                      <div className="bg-[#25D366] hover:bg-[#1EBE5D] active:bg-[#128C7E] transition-colors rounded-2xl p-6 shadow-xl cursor-pointer">
+                        <div className="flex items-center justify-center gap-3 mb-2">
+                          <svg viewBox="0 0 24 24" className="w-8 h-8 fill-white shrink-0" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                            <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.121 1.532 5.849L.057 23.886a.5.5 0 0 0 .609.61l6.098-1.595A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.956 9.956 0 0 1-5.337-1.547l-.383-.229-3.963 1.036 1.054-3.859-.249-.396A9.955 9.955 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                          </svg>
+                          <div>
+                            <p className="text-white font-bold text-xl leading-tight">Consultar por WhatsApp</p>
+                            <p className="text-white/80 text-sm">Respuesta inmediata · Gratis</p>
+                          </div>
+                        </div>
+                        <div className="mt-3 bg-white/20 rounded-xl py-2.5 text-center">
+                          <span className="text-white font-bold text-base tracking-wide">Enviar mensaje ahora →</span>
+                        </div>
+                      </div>
+                    </a>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <span className="text-xs text-gray-400 uppercase tracking-widest font-medium">o agendar visita</span>
+                      <div className="flex-1 h-px bg-gray-200" />
                     </div>
-                    <CardContent className="p-6">
+
+                    {/* Contact form */}
+                    <Card className="border-border shadow-lg rounded-2xl overflow-hidden">
+                      <CardContent className="p-6">
                       <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                           <FormField
@@ -393,6 +417,7 @@ export default function PropertyDetail() {
                       </div>
                     </CardContent>
                   </Card>
+                  </div>
                 )}
               </div>
             </div>
