@@ -112,6 +112,13 @@ export default function PropertyDetail() {
     }).format(price);
   };
 
+  const statusLabelMap: Record<string, string> = {
+    venta: "En venta",
+    alquiler: "Alquiler",
+    airbnb: "Airbnb",
+    vendido: "Vendida",
+  };
+
   return (
     <Layout>
       <div className="bg-white pb-24 pt-24 md:pt-32">
@@ -121,7 +128,7 @@ export default function PropertyDetail() {
           <div className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <Badge variant="secondary" className="uppercase tracking-wider text-xs font-bold px-3 py-1">
-                {property.status}
+                {statusLabelMap[property.status] ?? property.status}
               </Badge>
               {property.tag && (
                 <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-xs font-bold px-3 py-1">
