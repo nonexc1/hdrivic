@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
+import { encodePropertyId } from "@/lib/id-codec";
 import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store, ImageOff, MessageCircle, Mail, Bell } from "lucide-react";
 import { Property } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
@@ -93,7 +94,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true, margin: "-50px" }}
     >
-      <Link href={`/propiedades/${property.id}`} className="block h-full group">
+      <Link href={`/propiedades/${encodePropertyId(property.id)}`} className="block h-full group">
         <Card className="h-full overflow-hidden hover-elevate transition-all duration-300 border-border bg-white rounded-xl">
           <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
             {property.images && property.images.length > 0 ? (

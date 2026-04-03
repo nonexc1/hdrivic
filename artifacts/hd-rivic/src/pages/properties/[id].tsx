@@ -2,6 +2,7 @@ import { Layout } from "@/components/layout";
 import { useGetProperty, useCreateLead, getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { useParams } from "wouter";
 import { useState } from "react";
+import { decodePropertyId } from "@/lib/id-codec";
 import { Loader2, MapPin, BedDouble, Bath, Square, ChevronLeft, ChevronRight, CarFront, MessageCircle, Mail, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const contactFormSchema = z.object({
 
 export default function PropertyDetail() {
   const params = useParams();
-  const id = Number(params.id);
+  const id = decodePropertyId(params.id ?? "");
   const { toast } = useToast();
   
   const { data: property, isLoading } = useGetProperty(id, { 
@@ -123,7 +124,7 @@ export default function PropertyDetail() {
   };
 
   const waNumber = (property.whatsappNumber ?? "51924250021").replace(/[\s+\-()]/g, "");
-  const propertyUrl = `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/propiedades/${id}`;
+  const propertyUrl = `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/propiedades/${params.id}`;
   const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title}\n${propertyUrl}`)}`;
   const whatsappVendidoUrl = `https://wa.me/51924250021?text=${encodeURIComponent("Hola, busco propiedades similares a las que tienen disponibles")}`;
 
