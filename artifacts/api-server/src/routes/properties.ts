@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { db, propertiesTable } from "@workspace/db";
+import { db, propertiesTable, propertySubscribersTable } from "@workspace/db";
 import {
   CreatePropertyBody,
   UpdatePropertyBody,
@@ -9,6 +9,7 @@ import {
   DeletePropertyParams,
 } from "@workspace/api-zod";
 import { eq, and, gte, lte, sql, count } from "drizzle-orm";
+import { sendAvailabilityNotificationEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -174,6 +175,43 @@ router.get("/districts", async (req, res) => {
   }
 });
 
+// Subscribe to availability notification for a rentado property
+router.post("/:id/subscribe", async (req, res) => {
+  try {
+    const propertyId = parseInt(req.params.id);
+    const { email } = req.body as { email: string };
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ error: "Email inválido" });
+    }
+
+    const [property] = await db
+      .select()
+      .from(propertiesTable)
+      .where(eq(propertiesTable.id, propertyId));
+
+    if (!property) return res.status(404).json({ error: "Propiedad no encontrada" });
+    if (property.status !== "rentado") return res.status(400).json({ error: "La propiedad no está en estado rentado" });
+
+    // Avoid duplicate subscriptions
+    const existing = await db
+      .select()
+      .from(propertySubscribersTable)
+      .where(and(
+        eq(propertySubscribersTable.propertyId, propertyId),
+        eq(propertySubscribersTable.email, email),
+      ));
+
+    if (existing.length === 0) {
+      await db.insert(propertySubscribersTable).values({ propertyId, email });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    req.log.error({ err }, "Error subscribing to property");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = GetPropertyParams.parse({ id: parseInt(req.params.id) });
@@ -217,9 +255,32 @@ router.patch("/:id", async (req, res) => {
       }
     }
 
+    // Fetch current property to detect status changes
+    const [currentProperty] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
+    if (!currentProperty) {
+      res.status(404).json({ error: "Property not found" });
+      return;
+    }
+
     const updates: Record<string, unknown> = { ...body };
     if (body.price !== undefined) updates.price = String(body.price);
     if (body.area !== undefined) updates.area = body.area != null ? String(body.area) : null;
+
+    // If status changes FROM rentado to available, notify subscribers and clear them
+    const becomingAvailable =
+      currentProperty.status === "rentado" &&
+      body.status &&
+      (body.status === "alquiler" || body.status === "venta" || body.status === "airbnb");
+
+    // If status changes FROM vendido to available, clear the "Vendido" tag
+    const leavingVendido =
+      currentProperty.status === "vendido" &&
+      body.status &&
+      body.status !== "vendido";
+
+    if (leavingVendido && updates.tag === undefined) {
+      updates.tag = null;
+    }
 
     const [property] = await db
       .update(propertiesTable)
@@ -230,6 +291,28 @@ router.patch("/:id", async (req, res) => {
     if (!property) {
       res.status(404).json({ error: "Property not found" });
       return;
+    }
+
+    // Notify + clear subscribers if property became available again
+    if (becomingAvailable) {
+      const subscribers = await db
+        .select()
+        .from(propertySubscribersTable)
+        .where(eq(propertySubscribersTable.propertyId, id));
+
+      for (const sub of subscribers) {
+        sendAvailabilityNotificationEmail(sub.email, {
+          id: property.id,
+          title: property.title,
+          newStatus: body.status as string,
+        });
+      }
+
+      if (subscribers.length > 0) {
+        await db
+          .delete(propertySubscribersTable)
+          .where(eq(propertySubscribersTable.propertyId, id));
+      }
     }
 
     res.json({

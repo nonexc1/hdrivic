@@ -28,7 +28,7 @@ const propertySchema = z.object({
   description: z.string().min(10),
   price: z.coerce.number().min(1),
   currency: z.enum(["USD", "PEN"]),
-  status: z.enum(["venta", "alquiler", "airbnb", "vendido"]),
+  status: z.enum(["venta", "alquiler", "airbnb", "vendido", "rentado"]),
   type: z.enum(["casa", "departamento", "terreno", "comercial"]),
   ciudad: z.string().min(1, "Selecciona una ciudad"),
   district: z.string().min(1, "Selecciona un distrito"),
@@ -500,6 +500,7 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
                       <SelectItem value="alquiler">Alquiler</SelectItem>
                       <SelectItem value="airbnb">Airbnb</SelectItem>
                       <SelectItem value="vendido">Vendido</SelectItem>
+                      <SelectItem value="rentado">Alquilado (Rentado)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -683,7 +684,10 @@ function LeadsTab({ onLeadRead }: { onLeadRead?: () => void }) {
       if (!res.ok) throw new Error("Error");
       return res.json();
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: getListLeadsQueryKey() }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: getListLeadsQueryKey() });
+      qc.invalidateQueries({ queryKey: getListPropertiesQueryKey() });
+    },
   });
 
   const markRead = useMutation({
