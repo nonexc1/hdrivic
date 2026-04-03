@@ -123,7 +123,8 @@ export default function PropertyDetail() {
   };
 
   const waNumber = (property.whatsappNumber ?? "51924250021").replace(/[\s+\-()]/g, "");
-  const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${id})`)}`;
+  const propertyUrl = `${window.location.origin}${import.meta.env.BASE_URL.replace(/\/$/, "")}/propiedades/${id}`;
+  const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title}\n${propertyUrl}`)}`;
   const whatsappVendidoUrl = `https://wa.me/51924250021?text=${encodeURIComponent("Hola, busco propiedades similares a las que tienen disponibles")}`;
 
   const statusColorMap: Record<string, string> = {
@@ -472,7 +473,7 @@ export default function PropertyDetail() {
           title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
           description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
           submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
-          defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
+          defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title}\n${propertyUrl}`}
           onSubmit={() => {
             if (contactMode === "whatsapp") window.open(whatsappUrl, "_blank", "noopener,noreferrer");
             setContactOpen(false);
