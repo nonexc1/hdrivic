@@ -310,6 +310,59 @@ function DashboardTab({ currentUser }: { currentUser: any }) {
   );
 }
 
+const PROPERTY_STATUS_OPTIONS = [
+  { value: "venta",    label: "En venta",    color: "text-green-700 bg-green-50 border-green-200" },
+  { value: "alquiler", label: "En alquiler", color: "text-blue-700 bg-blue-50 border-blue-200" },
+  { value: "airbnb",   label: "Airbnb",      color: "text-rose-700 bg-rose-50 border-rose-200" },
+  { value: "rentado",  label: "Alquilado",   color: "text-gray-700 bg-gray-100 border-gray-300" },
+  { value: "vendido",  label: "Vendido",     color: "text-gray-700 bg-gray-100 border-gray-300" },
+] as const;
+
+function PropertyStatusSelect({ propertyId, currentStatus }: { propertyId: number; currentStatus: string }) {
+  const queryClient = useQC();
+  const { toast } = useToast();
+
+  const mutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const res = await fetch(`/api/properties/${propertyId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: getListPropertiesQueryKey() });
+      queryClient.invalidateQueries({ queryKey: getGetPropertyStatsQueryKey() });
+      toast({ title: "Estado actualizado correctamente" });
+    },
+    onError: () => toast({ title: "Error al actualizar el estado", variant: "destructive" }),
+  });
+
+  const opt = PROPERTY_STATUS_OPTIONS.find((o) => o.value === currentStatus);
+
+  return (
+    <Select
+      value={currentStatus}
+      onValueChange={(val) => mutation.mutate(val)}
+      disabled={mutation.isPending}
+    >
+      <SelectTrigger className={`h-7 text-xs font-semibold border px-2 py-0 w-36 ${opt?.color ?? "bg-gray-50 text-gray-700"}`}>
+        {mutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <SelectValue />}
+      </SelectTrigger>
+      <SelectContent>
+        {PROPERTY_STATUS_OPTIONS.map((o) => (
+          <SelectItem key={o.value} value={o.value} className="text-xs">
+            {o.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 function PropertiesTab({ currentUser }: { currentUser: any }) {
   const isAdmin = currentUser?.role === "admin";
   const { data: propertiesData, isLoading } = useListProperties(
@@ -344,11 +397,11 @@ function PropertiesTab({ currentUser }: { currentUser: any }) {
             {propertiesData?.properties.map((property) => (
               <TableRow key={property.id}>
                 <TableCell className="font-medium">#{property.id}</TableCell>
-                <TableCell>{property.title}</TableCell>
+                <TableCell className="max-w-[180px] truncate">{property.title}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="uppercase text-[10px]">{property.status}</Badge>
+                  <PropertyStatusSelect propertyId={property.id} currentStatus={property.status} />
                 </TableCell>
-                <TableCell>{property.currency} {property.price.toLocaleString()}</TableCell>
+                <TableCell className="whitespace-nowrap">{property.currency} {property.price.toLocaleString()}</TableCell>
                 <TableCell>
                   {property.ciudad ? <span className="text-xs text-muted-foreground">{property.ciudad} · </span> : null}
                   {property.district}

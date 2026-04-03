@@ -112,15 +112,6 @@ router.patch("/:id/status", async (req, res) => {
       .returning();
     if (!lead) return res.status(404).json({ error: "Lead not found" });
 
-    // Auto-update property status when lead is closed as vendido or rentado
-    if (lead.propertyId && (status === "vendido" || status === "rentado")) {
-      const newTag = status === "vendido" ? "Vendido" : null;
-      await db
-        .update(propertiesTable)
-        .set({ status, tag: newTag })
-        .where(eq(propertiesTable.id, lead.propertyId));
-    }
-
     res.json(lead);
   } catch (err) {
     req.log.error({ err }, "Error updating lead status");

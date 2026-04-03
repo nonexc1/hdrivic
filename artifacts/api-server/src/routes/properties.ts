@@ -236,6 +236,72 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// Quick status update endpoint (used by admin inline dropdown)
+const VALID_STATUSES = ["venta", "alquiler", "airbnb", "vendido", "rentado"] as const;
+
+router.patch("/:id/status", async (req, res) => {
+  try {
+    const session = getSession(req);
+    if (!session.userId) return res.status(401).json({ error: "Not authenticated" });
+
+    const id = parseInt(req.params.id);
+    const { status } = req.body as { status: string };
+
+    if (!VALID_STATUSES.includes(status as any)) {
+      return res.status(400).json({ error: "Estado inválido" });
+    }
+
+    // Check ownership for admin users
+    if (session.role === "admin") {
+      const [existing] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
+      if (!existing) return res.status(404).json({ error: "Propiedad no encontrada" });
+      if (existing.createdBy !== session.userId) return res.status(403).json({ error: "Sin permiso" });
+    }
+
+    const [currentProperty] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
+    if (!currentProperty) return res.status(404).json({ error: "Propiedad no encontrada" });
+
+    const updates: Record<string, unknown> = { status };
+
+    // Becoming available from rentado → notify subscribers
+    const becomingAvailable =
+      currentProperty.status === "rentado" &&
+      (status === "alquiler" || status === "venta" || status === "airbnb");
+
+    const [property] = await db
+      .update(propertiesTable)
+      .set(updates)
+      .where(eq(propertiesTable.id, id))
+      .returning();
+
+    if (!property) return res.status(404).json({ error: "Propiedad no encontrada" });
+
+    if (becomingAvailable) {
+      const subscribers = await db
+        .select()
+        .from(propertySubscribersTable)
+        .where(eq(propertySubscribersTable.propertyId, id));
+
+      for (const sub of subscribers) {
+        sendAvailabilityNotificationEmail(sub.email, {
+          id: property.id,
+          title: property.title,
+          newStatus: status,
+        });
+      }
+
+      if (subscribers.length > 0) {
+        await db.delete(propertySubscribersTable).where(eq(propertySubscribersTable.propertyId, id));
+      }
+    }
+
+    res.json({ ...property, price: parseFloat(property.price), area: property.area ? parseFloat(property.area) : null });
+  } catch (err) {
+    req.log.error({ err }, "Error updating property status");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.patch("/:id", async (req, res) => {
   try {
     const session = getSession(req);

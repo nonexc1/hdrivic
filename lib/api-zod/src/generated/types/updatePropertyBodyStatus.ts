@@ -14,4 +14,5 @@ export const UpdatePropertyBodyStatus = {
   alquiler: "alquiler",
   airbnb: "airbnb",
   vendido: "vendido",
+  rentado: "rentado",
 } as const;
