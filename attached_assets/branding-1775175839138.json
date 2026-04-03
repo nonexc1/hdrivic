@@ -1,0 +1,129 @@
+{
+  "colorScheme": "light",
+  "fonts": [
+    {
+      "family": "Hind",
+      "role": "body"
+    }
+  ],
+  "colors": {
+    "primary": "#0D624E",
+    "secondary": "#FF5500",
+    "accent": "#0D624E",
+    "background": "#FFFFFF",
+    "textPrimary": "#000000",
+    "link": "#037CC2"
+  },
+  "typography": {
+    "fontFamilies": {
+      "primary": "Hind",
+      "heading": "Hind"
+    },
+    "fontStacks": {
+      "heading": [
+        "Hind",
+        "sans-serif"
+      ],
+      "body": [
+        "Hind",
+        "sans-serif"
+      ],
+      "paragraph": [
+        "Hind",
+        "sans-serif"
+      ]
+    },
+    "fontSizes": {
+      "h1": "42px",
+      "h2": "24px",
+      "body": "18px"
+    }
+  },
+  "spacing": {
+    "baseUnit": 4,
+    "borderRadius": "8px"
+  },
+  "components": {
+    "input": {
+      "background": "#FFFFFF",
+      "textColor": "#000000",
+      "borderColor": null,
+      "borderRadius": "8px",
+      "borderRadiusCorners": {
+        "topLeft": "8px",
+        "topRight": "8px",
+        "bottomRight": "8px",
+        "bottomLeft": "8px"
+      },
+      "shadow": "none"
+    },
+    "buttonPrimary": {
+      "background": "#0D624E",
+      "textColor": "#FFFFFF",
+      "borderRadius": "12px",
+      "borderRadiusCorners": {
+        "topLeft": "12px",
+        "topRight": "12px",
+        "bottomRight": "12px",
+        "bottomLeft": "12px"
+      },
+      "shadow": "none"
+    },
+    "buttonSecondary": {
+      "background": "#F3F7F8",
+      "textColor": "#000000",
+      "borderColor": "#CBD6DC",
+      "borderRadius": "8px",
+      "borderRadiusCorners": {
+        "topLeft": "8px",
+        "topRight": "8px",
+        "bottomRight": "8px",
+        "bottomLeft": "8px"
+      },
+      "shadow": "none"
+    }
+  },
+  "images": {
+    "logo": null,
+    "favicon": "File saved at: attached_assets/favicon.png",
+    "ogImage": null
+  },
+  "__llm_button_reasoning": {
+    "primary": {
+      "index": 5,
+      "text": "Buscar",
+      "reasoning": "Button #1 with text 'Buscar' is the primary CTA because it uses the vibrant brand color #0D624E, which is consistent with the primary brand color. The action-oriented text 'Buscar' (Search) suggests a primary action on the site."
+    },
+    "secondary": {
+      "index": 7,
+      "text": "Alquilar",
+      "reasoning": "Button #7 with text 'Alquilar' is selected as secondary because it has a different background color (#F3F7F8) from the primary button. It represents a secondary action related to property options."
+    },
+    "confidence": 0.95
+  },
+  "personality": {
+    "tone": "professional",
+    "energy": "medium",
+    "targetAudience": "individuals seeking real estate in Peru"
+  },
+  "designSystem": {
+    "framework": "custom",
+    "componentLibrary": ""
+  },
+  "confidence": {
+    "buttons": 0.95,
+    "colors": 0.9,
+    "overall": 0.925
+  },
+  "__llm_metadata": {
+    "logoSelection": {
+      "llmCalled": false,
+      "llmSucceeded": false,
+      "finalSource": "none"
+    },
+    "buttonClassification": {
+      "llmCalled": true,
+      "llmSucceeded": true
+    }
+  }
+}
