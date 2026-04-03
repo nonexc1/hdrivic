@@ -3,7 +3,6 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import path from "path";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -12,15 +11,6 @@ const PgStore = connectPgSimple(session);
 const app: Express = express();
 
 app.set("trust proxy", 1);
-
-// Health check FIRST — before all middleware, before DB/session setup.
-// Railway (and any load balancer) must be able to reach this with zero dependencies.
-app.get("/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
-});
-app.get("/api/health", (_req, res) => {
-  res.status(200).json({ status: "ok" });
-});
 
 app.use(
   pinoHttp({
@@ -55,7 +45,7 @@ app.use(
     store: new PgStore({
       conString: process.env.DATABASE_URL,
       tableName: "session",
-      pruneSessionInterval: 60 * 15,
+      pruneSessionInterval: 60 * 15, // prune expired sessions every 15 min
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -63,20 +53,12 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   }),
 );
 
 app.use("/api", router);
-
-if (process.env.NODE_ENV === "production") {
-  const staticPath = path.join(__dirname, "../../hd-rivic/dist/public");
-  app.use(express.static(staticPath));
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(staticPath, "index.html"));
-  });
-}
 
 export default app;
