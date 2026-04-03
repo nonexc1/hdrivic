@@ -1,11 +1,13 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store, ImageOff } from "lucide-react";
-import { Property } from "@workspace/api-client-react/src/generated/api.schemas";
+import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store, ImageOff, MessageCircle, Mail } from "lucide-react";
+import { Property } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { InquiryDialog } from "@/components/inquiry-dialog";
 
 interface PropertyCardProps {
   property: Property;
@@ -26,12 +28,24 @@ const ImageWithFallback = ({ src, alt, className }: { src: string; alt: string; 
 };
 
 export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactMode, setContactMode] = useState<"whatsapp" | "email" | null>(null);
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-PE', {
       style: 'currency',
       currency: currency === 'PEN' ? 'PEN' : 'USD',
       maximumFractionDigits: 0
     }).format(price);
+  };
+
+  const whatsappUrl = useMemo(() => {
+    const message = encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`);
+    return `https://wa.me/${property.whatsappNumber}?text=${message}`;
+  }, [property.id, property.title, property.whatsappNumber]);
+
+  const openContact = (mode: "whatsapp" | "email") => {
+    setContactMode(mode);
+    setContactOpen(true);
   };
 
   const getPropertyTypeIcon = (type: string) => {
@@ -70,7 +84,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true, margin: "-50px" }}
     >
-      <Link href={`/propiedades/${property.id}`} className="block h-full group">
+      <div className="block h-full group">
         <Card className="h-full overflow-hidden hover-elevate transition-all duration-300 border-border bg-white rounded-xl">
           <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
             {/* Images */}
@@ -162,9 +176,32 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
                 </div>
               )}
             </div>
+
+            <div className="mt-4 flex gap-2">
+              <Button type="button" size="sm" className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openContact("whatsapp"); }}>
+                <MessageCircle className="w-4 h-4 mr-2" />
+                WhatsApp
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openContact("email"); }}>
+                <Mail className="w-4 h-4 mr-2" />
+                Correo
+              </Button>
+            </div>
           </CardContent>
         </Card>
-      </Link>
+      </div>
+      <InquiryDialog
+        open={contactOpen}
+        onOpenChange={setContactOpen}
+        title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
+        description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
+        submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
+        defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
+        onSubmit={() => {
+          window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+          setContactOpen(false);
+        }}
+      />
     </motion.div>
   );
 }
