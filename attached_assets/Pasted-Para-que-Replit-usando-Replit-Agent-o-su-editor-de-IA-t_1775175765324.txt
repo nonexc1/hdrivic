@@ -1,0 +1,40 @@
+Para que Replit (usando Replit Agent o su editor de IA) transforme tu sitio actual en una plataforma de nivel profesional como Urbania, necesitas un prompt extremadamente detallado. Este tipo de herramientas funcionan mejor cuando les das el contexto del negocio, la tecnología y el diseño de un solo golpe.
+
+Copia y pega este prompt en el chat del Replit Agent:
+
+Prompt para Replit Agent
+"Actúa como un desarrollador Senior Full-Stack especializado en el sector Real Estate. Necesito transformar mi sitio actual HD RIVIC GLOBAL S.A.C. en una plataforma inmobiliaria de alto nivel profesional, inspirada en la funcionalidad y estética de Urbania.pe.
+
+Requerimientos de Diseño:
+
+Estilo Visual: Limpio, moderno y corporativo. Usa una paleta de colores profesional (blanco, gris claro y un color de acento como azul marino o naranja vibrante para llamadas a la acción).
+
+Hero Section: Crea un buscador principal gigante con pestañas para 'Comprar', 'Alquilar' y 'Proyectos'. Debe incluir filtros rápidos: Tipo de inmueble, Distrito (enfocado en Lima, Perú) y Rango de Precio.
+
+Tipografía: Usa fuentes modernas y legibles como 'Inter' o 'Montserrat'.
+
+Funcionalidades Pro:
+
+Grid de Propiedades: Las tarjetas de inmuebles deben mostrar:
+
+Imagen principal con efecto hover.
+
+Etiquetas de estado (Ej: 'Entrega Inmediata', 'Remate').
+
+Iconografía clara para dormitorios, baños y m².
+
+Precio destacado en Soles (S/) y Dólares ($).
+
+Botón de WhatsApp: Implementa un botón flotante persistente en la esquina inferior derecha que diga 'Escríbenos' al pasar el mouse.
+
+Sección de Filtros Avanzados: Si el usuario hace scroll o va a la página de listado, debe haber una barra lateral con filtros por: Cochera, Antigüedad, y Áreas Comunes (Piscina, Gym, BBQ).
+
+Página de Detalle: Cada propiedad debe tener una galería de imágenes tipo slider, un mapa de ubicación (puedes usar un placeholder de Google Maps por ahora) y un formulario de contacto directo.
+
+Contenido Específico:
+
+Asegúrate de incluir secciones para 'Nosotros', 'Servicios' (Venta, Alquiler, Tasación) y un pie de página con el RUC de la empresa y redes sociales.
+
+El diseño debe ser 100% responsive (optimizado para móviles).
+
+Tecnología: Utiliza HTML5, CSS3 modernos (o Tailwind CSS si es posible) y JavaScript para la interactividad de los filtros y el buscador. Asegúrate de que el código sea limpio y escalable."
