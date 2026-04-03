@@ -114,9 +114,21 @@ export default function PropertyDetail() {
 
   const statusLabelMap: Record<string, string> = {
     venta: "En venta",
-    alquiler: "Alquiler",
+    alquiler: "En alquiler",
     airbnb: "Airbnb",
-    vendido: "Vendida",
+    vendido: "Vendido",
+    rentado: "Rentado",
+  };
+
+  const displayStatus = property.status === "vendido" || property.status === "rentado" ? "no_disponible" : property.status;
+
+  const statusColorMap: Record<string, string> = {
+    venta: "bg-blue-100 text-blue-800 border-blue-200",
+    alquiler: "bg-green-100 text-green-800 border-green-200",
+    airbnb: "bg-rose-100 text-rose-800 border-rose-200",
+    vendido: "bg-gray-100 text-gray-800 border-gray-200",
+    rentado: "bg-gray-100 text-gray-800 border-gray-200",
+    no_disponible: "bg-gray-200 text-gray-700 border-gray-300",
   };
 
   return (
@@ -127,8 +139,8 @@ export default function PropertyDetail() {
           {/* Header */}
           <div className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Badge variant="secondary" className="uppercase tracking-wider text-xs font-bold px-3 py-1">
-                {statusLabelMap[property.status] ?? property.status}
+              <Badge variant="secondary" className={`${statusColorMap[displayStatus]} uppercase tracking-wider text-xs font-bold px-3 py-1`}>
+                {displayStatus === "no_disponible" ? "No disponible" : (statusLabelMap[property.status] ?? property.status)}
               </Badge>
               {property.tag && (
                 <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-xs font-bold px-3 py-1">
