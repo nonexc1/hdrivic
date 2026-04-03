@@ -13,6 +13,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { InquiryDialog } from "@/components/inquiry-dialog";
+import { MessageCircle, Mail } from "lucide-react";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
@@ -32,6 +34,8 @@ export default function PropertyDetail() {
   
   const createLead = useCreateLead();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactMode, setContactMode] = useState<"whatsapp" | "email" | null>(null);
 
   const form = useForm<z.infer<typeof contactFormSchema>>({
     resolver: zodResolver(contactFormSchema),
@@ -111,6 +115,8 @@ export default function PropertyDetail() {
       maximumFractionDigits: 0
     }).format(price);
   };
+
+  const whatsappUrl = `https://wa.me/${property?.whatsappNumber ?? ""}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property?.title ?? ""} (ID: ${id})`)}`;
 
   const statusLabelMap: Record<string, string> = {
     venta: "En venta",
@@ -322,6 +328,16 @@ export default function PropertyDetail() {
                         </Button>
                       </form>
                     </Form>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <Button type="button" className="bg-[#25D366] hover:bg-[#128C7E] text-white" onClick={() => { setContactMode("whatsapp"); setContactOpen(true); }}>
+                        <MessageCircle className="w-4 h-4 mr-2" />
+                        WhatsApp
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => { setContactMode("email"); setContactOpen(true); }}>
+                        <Mail className="w-4 h-4 mr-2" />
+                        Correo
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -346,6 +362,18 @@ export default function PropertyDetail() {
           </Button>
         </a>
       </div>
+      <InquiryDialog
+        open={contactOpen}
+        onOpenChange={setContactOpen}
+        title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
+        description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
+        submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
+        defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
+        onSubmit={() => {
+          if (contactMode === "whatsapp") window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+          setContactOpen(false);
+        }}
+      />
     </Layout>
   );
 }
