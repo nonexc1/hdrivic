@@ -28,8 +28,10 @@ export default function Home() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchStatus && searchStatus !== "all") params.append("status", searchStatus);
-    if (searchType && searchType !== "all") params.append("type", searchType);
+    const operationStatus = searchStatus === "venta" ? "venta" : searchStatus === "alquiler" ? "alquiler" : "venta";
+    const operationType = searchStatus === "airbnb" ? "terreno" : searchType;
+    if (operationStatus && operationStatus !== "all") params.append("status", operationStatus);
+    if (operationType && operationType !== "all") params.append("type", operationType);
     if (searchCity && searchCity !== "all") params.append("city", searchCity);
     if (searchDistrict && searchDistrict !== "all") params.append("district", searchDistrict);
 
@@ -89,9 +91,9 @@ export default function Home() {
 
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white/96 rounded-2xl shadow-2xl p-5 md:p-6 border border-white/70 backdrop-blur-sm">
               <div className="flex gap-2 mb-5">
-                <button type="button" onClick={() => setOperation("venta")} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "venta" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Comprar</button>
-                <button type="button" onClick={() => setOperation("alquiler")} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "alquiler" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Alquilar</button>
-                <button type="button" onClick={() => setOperation("airbnb")} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "airbnb" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Proyectos</button>
+                <button type="button" onClick={() => { setOperation("venta"); setSearchType("all"); }} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "venta" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Comprar</button>
+                <button type="button" onClick={() => { setOperation("alquiler"); setSearchType("all"); }} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "alquiler" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Alquilar</button>
+                <button type="button" onClick={() => { setOperation("airbnb"); setSearchType("terreno"); }} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "airbnb" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Proyectos</button>
               </div>
               <form onSubmit={handleSearch} className="grid gap-4">
                 <div>

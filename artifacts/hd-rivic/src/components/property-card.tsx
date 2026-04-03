@@ -51,6 +51,13 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
     'vendido': 'bg-gray-100 text-gray-800 border-gray-200'
   };
 
+  const statusLabelMap: Record<string, string> = {
+    venta: "En venta",
+    alquiler: "Alquiler",
+    airbnb: "Airbnb",
+    vendido: "Vendida",
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -86,7 +93,7 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
             {/* Badges */}
             <div className="absolute top-4 left-4 flex flex-col gap-2">
               <Badge variant="secondary" className={`${statusColorMap[property.status]} uppercase tracking-wider text-[10px] font-bold px-2 py-1 shadow-sm`}>
-                {property.status}
+                {statusLabelMap[property.status] ?? property.status}
               </Badge>
               {property.tag && (
                 <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-[10px] font-bold px-2 py-1 shadow-sm">
