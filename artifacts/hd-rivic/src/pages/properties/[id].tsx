@@ -122,7 +122,9 @@ export default function PropertyDetail() {
     }).format(price);
   };
 
-  const whatsappUrl = `https://wa.me/${property.whatsappNumber ?? ""}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${id})`)}`;
+  const waNumber = (property.whatsappNumber ?? "51924250051").replace(/[\s+\-()]/g, "");
+  const whatsappUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${id})`)}`;
+  const whatsappVendidoUrl = `https://wa.me/51924250051?text=${encodeURIComponent("Hola, busco propiedades similares a las que tienen disponibles")}`;
 
   const statusColorMap: Record<string, string> = {
     venta: "bg-blue-100 text-blue-800 border-blue-200",
@@ -308,7 +310,7 @@ export default function PropertyDetail() {
                       <p className="text-white/70 text-sm">Esta propiedad ya fue vendida. Contáctanos para conocer propiedades similares disponibles.</p>
                     </div>
                     <CardContent className="p-6">
-                      <a href="https://wa.me/+51999999999?text=Hola, busco propiedades similares a las que tienen disponibles" target="_blank" rel="noopener noreferrer">
+                      <a href={whatsappVendidoUrl} target="_blank" rel="noopener noreferrer">
                         <Button className="w-full h-12 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold">
                           <MessageCircle className="w-5 h-5 mr-2" />
                           Consultar propiedades similares
