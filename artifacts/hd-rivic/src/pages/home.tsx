@@ -53,29 +53,29 @@ export default function Home() {
 
   return (
     <Layout>
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-primary">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_38%),linear-gradient(180deg,rgba(13,98,78,0.95),rgba(13,98,78,0.82))]" />
-        <div className="absolute inset-0 bg-[url('/images/hero-1.png')] bg-cover bg-center opacity-15 mix-blend-screen" />
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(28,58,110,0.08),_transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.98),rgba(240,244,250,0.96))]" />
+        <div className="absolute inset-0 bg-[url('/images/hero-1.png')] bg-cover bg-center opacity-10 mix-blend-multiply" />
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white/90 text-xs font-semibold tracking-[0.2em] uppercase mb-6 backdrop-blur-sm">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/5 px-4 py-2 text-primary text-xs font-semibold tracking-[0.2em] uppercase mb-6 backdrop-blur-sm">
                 HD RIVIC GLOBAL S.A.C.
               </div>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-sans font-bold text-white leading-tight mb-6">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-sans font-bold text-primary leading-tight mb-6">
                 Encuentra tu hogar con estilo profesional.
               </h1>
-              <p className="text-lg md:text-xl text-white/80 max-w-2xl mb-8 font-light leading-relaxed">
+              <p className="text-lg md:text-xl text-gray-600 max-w-2xl mb-8 font-light leading-relaxed">
                 Plataforma inmobiliaria moderna, clara y confiable para comprar, alquilar y descubrir proyectos en Perú.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/propiedades"><Button className="h-12 px-6 bg-secondary hover:bg-secondary/90 text-white font-bold">Ver propiedades</Button></Link>
-                <Link href="/admin"><Button variant="outline" className="h-12 px-6 border-white/30 text-white hover:bg-white hover:text-primary bg-transparent">Portal admin</Button></Link>
+                <Link href="/admin"><Button variant="outline" className="h-12 px-6 border-primary/20 text-primary hover:bg-primary hover:text-white bg-white">Portal admin</Button></Link>
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white rounded-2xl shadow-2xl p-5 md:p-6 border border-white/40">
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white rounded-2xl shadow-2xl p-5 md:p-6 border border-gray-200">
               <div className="flex gap-2 mb-5">
                 <button className="flex-1 h-11 rounded-xl bg-primary text-white text-sm font-semibold">Comprar</button>
                 <button className="flex-1 h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Alquilar</button>
