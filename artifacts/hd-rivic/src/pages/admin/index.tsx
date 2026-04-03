@@ -22,6 +22,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { CIUDADES, getDistritos } from "@/lib/peru-locations";
+import { encodePropertyId } from "@/lib/id-codec";
 
 const propertySchema = z.object({
   title: z.string().min(3),
@@ -410,7 +411,7 @@ function PropertiesTab({ currentUser }: { currentUser: any }) {
               <TableRow key={property.id}>
                 <TableCell className="font-medium">#{property.id}</TableCell>
                 <TableCell className="max-w-[180px] truncate">
-                  <Link href={`/propiedades/${property.id}`} className="text-secondary hover:underline font-medium">
+                  <Link href={`/propiedades/${encodePropertyId(property.id)}`} className="text-secondary hover:underline font-medium">
                     {property.title}
                   </Link>
                 </TableCell>
@@ -839,7 +840,7 @@ function LeadsTab({ onLeadRead }: { onLeadRead?: () => void }) {
                 </TableCell>
                 <TableCell>
                   {lead.propertyId ? (
-                    <Link href={`/propiedades/${lead.propertyId}`} className="text-primary hover:underline font-medium">
+                    <Link href={`/propiedades/${encodePropertyId(lead.propertyId!)}`} className="text-primary hover:underline font-medium">
                       #{lead.propertyId}
                     </Link>
                   ) : "-"}
