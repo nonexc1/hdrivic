@@ -13,6 +13,15 @@ const app: Express = express();
 
 app.set("trust proxy", 1);
 
+// Health check FIRST — before all middleware, before DB/session setup.
+// Railway (and any load balancer) must be able to reach this with zero dependencies.
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.use(
   pinoHttp({
     logger,
@@ -46,7 +55,7 @@ app.use(
     store: new PgStore({
       conString: process.env.DATABASE_URL,
       tableName: "session",
-      pruneSessionInterval: 60 * 15, // prune expired sessions every 15 min
+      pruneSessionInterval: 60 * 15,
     }),
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -54,15 +63,11 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000,
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
     },
   }),
 );
-
-app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
-});
 
 app.use("/api", router);
 
