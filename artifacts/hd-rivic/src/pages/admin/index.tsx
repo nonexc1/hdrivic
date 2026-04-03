@@ -458,7 +458,7 @@ function PropertyFormDialog({ open, onOpenChange, mode, property }: { open?: boo
       ciudad: "",
       district: "",
       address: "",
-      whatsappNumber: "+51 999 999 999",
+      whatsappNumber: "+51924250051",
       featured: false,
       images: "",
     }
