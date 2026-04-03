@@ -2,7 +2,7 @@ import { Layout } from "@/components/layout";
 import { useGetProperty, useCreateLead, getGetPropertyQueryKey } from "@workspace/api-client-react";
 import { useParams } from "wouter";
 import { useState } from "react";
-import { Loader2, MapPin, BedDouble, Bath, Square, ChevronLeft, ChevronRight, Check, CarFront } from "lucide-react";
+import { Loader2, MapPin, BedDouble, Bath, Square, ChevronLeft, ChevronRight, CarFront, MessageCircle, Mail, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { InquiryDialog } from "@/components/inquiry-dialog";
-import { MessageCircle, Mail } from "lucide-react";
+import { NotifyMeDialog } from "@/components/notify-me-dialog";
 
 const contactFormSchema = z.object({
   name: z.string().min(2, "Nombre requerido"),
@@ -36,6 +36,7 @@ export default function PropertyDetail() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [contactOpen, setContactOpen] = useState(false);
   const [contactMode, setContactMode] = useState<"whatsapp" | "email" | null>(null);
+  const [notifyOpen, setNotifyOpen] = useState(false);
 
   const form = useForm<z.infer<typeof contactFormSchema>>({
     resolver: zodResolver(contactFormSchema),
@@ -108,6 +109,11 @@ export default function PropertyDetail() {
     );
   }
 
+  const status = property.status as string;
+  const isUnavailable = status === "vendido" || status === "rentado";
+  const isRentado = status === "rentado";
+  const isVendido = status === "vendido";
+
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-PE', {
       style: 'currency',
@@ -116,26 +122,26 @@ export default function PropertyDetail() {
     }).format(price);
   };
 
-  const whatsappUrl = `https://wa.me/${property?.whatsappNumber ?? ""}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property?.title ?? ""} (ID: ${id})`)}`;
-
-  const statusLabelMap: Record<string, string> = {
-    venta: "En venta",
-    alquiler: "En alquiler",
-    airbnb: "Airbnb",
-    vendido: "Vendido",
-    rentado: "Rentado",
-  };
-
-  const displayStatus = property.status === "vendido" || property.status === "rentado" ? "no_disponible" : property.status;
+  const whatsappUrl = `https://wa.me/${property.whatsappNumber ?? ""}?text=${encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${id})`)}`;
 
   const statusColorMap: Record<string, string> = {
     venta: "bg-blue-100 text-blue-800 border-blue-200",
     alquiler: "bg-green-100 text-green-800 border-green-200",
     airbnb: "bg-rose-100 text-rose-800 border-rose-200",
-    vendido: "bg-gray-100 text-gray-800 border-gray-200",
-    rentado: "bg-gray-100 text-gray-800 border-gray-200",
-    no_disponible: "bg-gray-200 text-gray-700 border-gray-300",
+    vendido: "bg-gray-200 text-gray-700 border-gray-300",
+    rentado: "bg-gray-200 text-gray-700 border-gray-300",
   };
+
+  const statusLabel: Record<string, string> = {
+    venta: "En venta",
+    alquiler: "En alquiler",
+    airbnb: "Airbnb",
+    vendido: "No disponible",
+    rentado: "Alquilado",
+  };
+
+  // Only show "Nuevo" / "Exclusivo" tags — never persist "Vendido" tag when status changed
+  const showTag = property.tag && property.tag !== "Vendido";
 
   return (
     <Layout>
@@ -145,10 +151,15 @@ export default function PropertyDetail() {
           {/* Header */}
           <div className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Badge variant="secondary" className={`${statusColorMap[displayStatus]} uppercase tracking-wider text-xs font-bold px-3 py-1`}>
-                {displayStatus === "no_disponible" ? "No disponible" : (statusLabelMap[property.status] ?? property.status)}
+              <Badge variant="secondary" className={`${statusColorMap[status] ?? "bg-gray-100 text-gray-700"} uppercase tracking-wider text-xs font-bold px-3 py-1`}>
+                {statusLabel[status] ?? status}
               </Badge>
-              {property.tag && (
+              {isVendido && (
+                <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-xs font-bold px-3 py-1">
+                  Vendido
+                </Badge>
+              )}
+              {showTag && (
                 <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-xs font-bold px-3 py-1">
                   {property.tag}
                 </Badge>
@@ -169,7 +180,7 @@ export default function PropertyDetail() {
             </div>
           </div>
 
-          {/* Image Gallery — full width main image */}
+          {/* Image Gallery */}
           <div className="mb-10">
             <div className="relative rounded-2xl overflow-hidden group bg-gray-100 h-[420px] md:h-[560px] w-full">
               {property.images && property.images.length > 0 ? (
@@ -198,7 +209,6 @@ export default function PropertyDetail() {
               )}
             </div>
 
-            {/* Thumbnail strip */}
             {property.images && property.images.length > 1 && (
               <div className="flex gap-3 mt-3 overflow-x-auto pb-1">
                 {property.images.map((img, idx) => (
@@ -260,120 +270,178 @@ export default function PropertyDetail() {
               </div>
             </div>
 
-            {/* Sidebar Contact Form */}
+            {/* Sidebar */}
             <div>
               <div className="sticky top-24">
-                <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
-                  <div className="bg-primary p-6 text-center">
-                    <h3 className="text-xl font-sans font-bold text-white mb-2">Agendar Visita</h3>
-                    <p className="text-primary-foreground/80 text-sm">Déjanos tus datos y un asesor se contactará contigo a la brevedad.</p>
-                  </div>
-                  <CardContent className="p-6">
-                    <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Nombre completo</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Ej. Juan Pérez" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Correo electrónico</FormLabel>
-                              <FormControl>
-                                <Input placeholder="ejemplo@correo.com" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Teléfono</FormLabel>
-                              <FormControl>
-                                <Input placeholder="+51 999 999 999" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="message"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Mensaje</FormLabel>
-                              <FormControl>
-                                <Textarea className="resize-none" rows={3} {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" className="w-full h-12 bg-secondary hover:bg-secondary/90 text-white font-bold" disabled={createLead.isPending}>
-                          {createLead.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enviar Solicitud"}
-                        </Button>
-                      </form>
-                    </Form>
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <Button type="button" className="bg-[#25D366] hover:bg-[#128C7E] text-white" onClick={() => { setContactMode("whatsapp"); setContactOpen(true); }}>
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        WhatsApp
-                      </Button>
-                      <Button type="button" variant="outline" onClick={() => { setContactMode("email"); setContactOpen(true); }}>
-                        <Mail className="w-4 h-4 mr-2" />
-                        Correo
-                      </Button>
+                {isRentado ? (
+                  /* Rentado state: show notify card */
+                  <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
+                    <div className="bg-gray-700 p-6 text-center">
+                      <h3 className="text-xl font-sans font-bold text-white mb-2">Propiedad Alquilada</h3>
+                      <p className="text-white/70 text-sm">Esta propiedad está actualmente alquilada. Puedes suscribirte para recibir una notificación cuando vuelva a estar disponible.</p>
                     </div>
-                  </CardContent>
-                </Card>
+                    <CardContent className="p-6">
+                      <Button
+                        className="w-full h-12 bg-secondary hover:bg-secondary/90 text-white font-bold"
+                        onClick={() => setNotifyOpen(true)}
+                      >
+                        <Bell className="w-5 h-5 mr-2" />
+                        Notificarme cuando esté disponible
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : isVendido ? (
+                  /* Vendido state: show sold card */
+                  <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
+                    <div className="bg-gray-700 p-6 text-center">
+                      <h3 className="text-xl font-sans font-bold text-white mb-2">Propiedad Vendida</h3>
+                      <p className="text-white/70 text-sm">Esta propiedad ya fue vendida. Contáctanos para conocer propiedades similares disponibles.</p>
+                    </div>
+                    <CardContent className="p-6">
+                      <a href="https://wa.me/+51999999999?text=Hola, busco propiedades similares a las que tienen disponibles" target="_blank" rel="noopener noreferrer">
+                        <Button className="w-full h-12 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold">
+                          <MessageCircle className="w-5 h-5 mr-2" />
+                          Consultar propiedades similares
+                        </Button>
+                      </a>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  /* Available: show contact form */
+                  <Card className="border-border shadow-xl rounded-2xl overflow-hidden">
+                    <div className="bg-primary p-6 text-center">
+                      <h3 className="text-xl font-sans font-bold text-white mb-2">Agendar Visita</h3>
+                      <p className="text-primary-foreground/80 text-sm">Déjanos tus datos y un asesor se contactará contigo a la brevedad.</p>
+                    </div>
+                    <CardContent className="p-6">
+                      <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                          <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Nombre completo</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Ej. Juan Pérez" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Correo electrónico</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="ejemplo@correo.com" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="phone"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Teléfono</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="+51 999 999 999" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="message"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Mensaje</FormLabel>
+                                <FormControl>
+                                  <Textarea className="resize-none" rows={3} {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" className="w-full h-12 bg-secondary hover:bg-secondary/90 text-white font-bold" disabled={createLead.isPending}>
+                            {createLead.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : "Enviar Solicitud"}
+                          </Button>
+                        </form>
+                      </Form>
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          className="bg-[#25D366] hover:bg-[#128C7E] text-white"
+                          onClick={() => { setContactMode("whatsapp"); setContactOpen(true); }}
+                        >
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          WhatsApp
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => { setContactMode("email"); setContactOpen(true); }}
+                        >
+                          <Mail className="w-4 h-4 mr-2" />
+                          Correo
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sticky Mobile WhatsApp Button */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-40 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-        <a 
-          href={`https://wa.me/${property.whatsappNumber}?text=Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex w-full"
-        >
-          <Button className="w-full h-14 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg rounded-xl">
-            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-            </svg>
-            Escríbeme por WhatsApp
-          </Button>
-        </a>
-      </div>
-      <InquiryDialog
-        open={contactOpen}
-        onOpenChange={setContactOpen}
-        title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
-        description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
-        submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
-        defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
-        onSubmit={() => {
-          if (contactMode === "whatsapp") window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-          setContactOpen(false);
-        }}
-      />
+      {/* Sticky Mobile CTA */}
+      {!isUnavailable && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 z-40 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full"
+          >
+            <Button className="w-full h-14 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-lg rounded-xl">
+              <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+              Escríbeme por WhatsApp
+            </Button>
+          </a>
+        </div>
+      )}
+
+      {isRentado && (
+        <NotifyMeDialog
+          open={notifyOpen}
+          onOpenChange={setNotifyOpen}
+          propertyId={property.id}
+          propertyTitle={property.title}
+        />
+      )}
+
+      {!isUnavailable && (
+        <InquiryDialog
+          open={contactOpen}
+          onOpenChange={setContactOpen}
+          title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
+          description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
+          submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
+          defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
+          onSubmit={() => {
+            if (contactMode === "whatsapp") window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+            setContactOpen(false);
+          }}
+        />
+      )}
     </Layout>
   );
 }

@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store, ImageOff, MessageCircle, Mail } from "lucide-react";
+import { MapPin, BedDouble, Bath, Square, Home, Building2, Trees, Store, ImageOff, MessageCircle, Mail, Bell } from "lucide-react";
 import { Property } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InquiryDialog } from "@/components/inquiry-dialog";
+import { NotifyMeDialog } from "@/components/notify-me-dialog";
 
 interface PropertyCardProps {
   property: Property;
@@ -30,6 +31,13 @@ const ImageWithFallback = ({ src, alt, className }: { src: string; alt: string; 
 export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const [contactMode, setContactMode] = useState<"whatsapp" | "email" | null>(null);
+  const [notifyOpen, setNotifyOpen] = useState(false);
+
+  const status = property.status as string;
+  const isUnavailable = status === "vendido" || status === "rentado";
+  const isRentado = status === "rentado";
+  const isVendido = status === "vendido";
+
   const formatPrice = (price: number, currency: string) => {
     return new Intl.NumberFormat('es-PE', {
       style: 'currency',
@@ -58,24 +66,24 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
     }
   };
 
-  const statusLabelMap: Record<string, string> = {
-    venta: "En venta",
-    alquiler: "En alquiler",
-    airbnb: "Airbnb",
-    vendido: "Vendido",
-    rentado: "Rentado",
-  };
-
-  const displayStatus = property.status === "vendido" || property.status === "rentado" ? "no_disponible" : property.status;
-
   const statusColorMap: Record<string, string> = {
     venta: "bg-blue-100 text-blue-800 border-blue-200",
     alquiler: "bg-green-100 text-green-800 border-green-200",
     airbnb: "bg-rose-100 text-rose-800 border-rose-200",
-    vendido: "bg-gray-100 text-gray-800 border-gray-200",
-    rentado: "bg-gray-100 text-gray-800 border-gray-200",
-    no_disponible: "bg-gray-200 text-gray-700 border-gray-300",
+    vendido: "bg-gray-200 text-gray-700 border-gray-300",
+    rentado: "bg-gray-200 text-gray-700 border-gray-300",
   };
+
+  const statusLabel: Record<string, string> = {
+    venta: "En venta",
+    alquiler: "En alquiler",
+    airbnb: "Airbnb",
+    vendido: "No disponible",
+    rentado: "Alquilado",
+  };
+
+  // Only show tag for Nuevo/Exclusivo — never show "Vendido" tag when status changed back
+  const showTag = property.tag && property.tag !== "Vendido";
 
   return (
     <motion.div
@@ -84,10 +92,9 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
       transition={{ duration: 0.5, delay: index * 0.1 }}
       viewport={{ once: true, margin: "-50px" }}
     >
-      <div className="block h-full group">
+      <Link href={`/propiedades/${property.id}`} className="block h-full group">
         <Card className="h-full overflow-hidden hover-elevate transition-all duration-300 border-border bg-white rounded-xl">
           <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-            {/* Images */}
             {property.images && property.images.length > 0 ? (
               <>
                 <ImageWithFallback
@@ -109,12 +116,17 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
               </div>
             )}
 
-            {/* Badges */}
+            {/* Status + special badges */}
             <div className="absolute top-4 left-4 flex flex-col gap-2">
-              <Badge variant="secondary" className={`${statusColorMap[displayStatus]} uppercase tracking-wider text-[10px] font-bold px-2 py-1 shadow-sm`}>
-                {displayStatus === "no_disponible" ? "No disponible" : (statusLabelMap[property.status] ?? property.status)}
+              <Badge variant="secondary" className={`${statusColorMap[status] ?? "bg-gray-100 text-gray-700"} uppercase tracking-wider text-[10px] font-bold px-2 py-1 shadow-sm`}>
+                {statusLabel[status] ?? status}
               </Badge>
-              {property.tag && (
+              {isVendido && (
+                <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-[10px] font-bold px-2 py-1 shadow-sm">
+                  Vendido
+                </Badge>
+              )}
+              {showTag && (
                 <Badge className="bg-secondary text-white border-none uppercase tracking-wider text-[10px] font-bold px-2 py-1 shadow-sm">
                   {property.tag}
                 </Badge>
@@ -177,31 +189,69 @@ export function PropertyCard({ property, index = 0 }: PropertyCardProps) {
               )}
             </div>
 
-            <div className="mt-4 flex gap-2">
-              <Button type="button" size="sm" className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openContact("whatsapp"); }}>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                WhatsApp
-              </Button>
-              <Button type="button" size="sm" variant="outline" className="flex-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); openContact("email"); }}>
-                <Mail className="w-4 h-4 mr-2" />
-                Correo
-              </Button>
-            </div>
+            {/* Action buttons */}
+            {isRentado ? (
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full bg-secondary hover:bg-secondary/90 text-white"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setNotifyOpen(true); }}
+                >
+                  <Bell className="w-4 h-4 mr-2" />
+                  Notificarme cuando esté disponible
+                </Button>
+              </div>
+            ) : !isUnavailable ? (
+              <div className="mt-4 flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="flex-1 bg-[#25D366] hover:bg-[#128C7E] text-white"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); openContact("whatsapp"); }}
+                >
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); openContact("email"); }}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Correo
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
-      </div>
-      <InquiryDialog
-        open={contactOpen}
-        onOpenChange={setContactOpen}
-        title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
-        description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
-        submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
-        defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
-        onSubmit={() => {
-          window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-          setContactOpen(false);
-        }}
-      />
+      </Link>
+
+      {!isUnavailable && (
+        <InquiryDialog
+          open={contactOpen}
+          onOpenChange={setContactOpen}
+          title={contactMode === "whatsapp" ? "Contactar por WhatsApp" : "Agendar visita"}
+          description={contactMode === "whatsapp" ? "Completa tus datos y abriremos WhatsApp con tu mensaje listo." : "Déjanos tus datos y un asesor se contactará contigo a la brevedad."}
+          submitLabel={contactMode === "whatsapp" ? "Abrir WhatsApp" : "Enviar Solicitud"}
+          defaultMessage={`Hola, estoy interesado en la propiedad: ${property.title} (ID: ${property.id})`}
+          onSubmit={() => {
+            if (contactMode === "whatsapp") window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+            setContactOpen(false);
+          }}
+        />
+      )}
+
+      {isRentado && (
+        <NotifyMeDialog
+          open={notifyOpen}
+          onOpenChange={setNotifyOpen}
+          propertyId={property.id}
+          propertyTitle={property.title}
+        />
+      )}
     </motion.div>
   );
 }

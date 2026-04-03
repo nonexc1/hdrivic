@@ -143,7 +143,6 @@ export async function sendApprovalEmail(to: string, name: string) {
     const subject = "¡Tu cuenta en HD RIVIC GLOBAL ha sido aprobada!";
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #F0F4FA; border-radius: 8px; overflow: hidden;">
-        <!-- Header -->
         <div style="background: #1C3A6E; padding: 32px 40px; text-align: center;">
           <div style="color: white; font-size: 22px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;">
             <span style="color: #2B7FD4;">HD</span> RIVIC
@@ -151,7 +150,6 @@ export async function sendApprovalEmail(to: string, name: string) {
           </div>
         </div>
 
-        <!-- Body -->
         <div style="background: white; padding: 40px;">
           <h2 style="color: #1C3A6E; font-size: 22px; font-weight: 700; margin-bottom: 16px;">
             ¡Bienvenido al equipo, ${name}!
@@ -179,7 +177,6 @@ export async function sendApprovalEmail(to: string, name: string) {
           </p>
         </div>
 
-        <!-- Footer -->
         <div style="background: #1C3A6E; padding: 20px 40px; text-align: center;">
           <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin: 0; letter-spacing: 0.5px;">
             &copy; ${new Date().getFullYear()} HD RIVIC GLOBAL S.A.C. &mdash; Todos los derechos reservados.
@@ -198,5 +195,53 @@ export async function sendApprovalEmail(to: string, name: string) {
     console.log("[mailer] Email sent via Gmail, message id:", result.data.id);
   } catch (err) {
     console.error("[mailer] Failed to send approval email:", err);
+  }
+}
+
+export async function sendAvailabilityNotificationEmail(
+  to: string,
+  property: { id: number; title: string; newStatus: string },
+) {
+  try {
+    const gmail = await getUncachableGmailClient();
+    const statusLabel = property.newStatus === "alquiler" ? "disponible para alquilar" : "disponible para la venta";
+    const subject = `¡La propiedad que seguías ya está ${statusLabel}!`;
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #F0F4FA; border-radius: 8px; overflow: hidden;">
+        <div style="background: #1C3A6E; padding: 32px 40px; text-align: center;">
+          <div style="color: white; font-size: 22px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;">
+            <span style="color: #2B7FD4;">HD</span> RIVIC
+            <span style="font-size: 11px; font-weight: 400; opacity: 0.6; margin-left: 8px;">GLOBAL S.A.C.</span>
+          </div>
+        </div>
+        <div style="background: white; padding: 40px;">
+          <h2 style="color: #1C3A6E; font-size: 20px; font-weight: 700; margin-bottom: 12px;">¡Buenas noticias!</h2>
+          <p style="color: #4a5568; font-size: 15px; line-height: 1.7; margin-bottom: 24px;">
+            La propiedad <strong style="color: #1C3A6E;">${property.title}</strong> que marcaste para seguir
+            ahora está <strong style="color: #2B7FD4;">${statusLabel}</strong>.
+          </p>
+          <div style="text-align: center; margin-bottom: 32px;">
+            <a href="https://hd-rivic-global-inmobiliaria.replit.app/propiedades/${property.id}"
+               style="display: inline-block; background: #2B7FD4; color: white; padding: 14px 36px; border-radius: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none;">
+              Ver Propiedad
+            </a>
+          </div>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 24px;" />
+          <p style="color: #a0aec0; font-size: 12px; line-height: 1.6; margin: 0;">
+            Este es un aviso automático de HD RIVIC GLOBAL S.A.C. — no respondas a este mensaje.
+          </p>
+        </div>
+        <div style="background: #1C3A6E; padding: 20px 40px; text-align: center;">
+          <p style="color: rgba(255,255,255,0.4); font-size: 11px; margin: 0; letter-spacing: 0.5px;">
+            &copy; ${new Date().getFullYear()} HD RIVIC GLOBAL S.A.C. &mdash; Todos los derechos reservados.
+          </p>
+        </div>
+      </div>
+    `;
+    const raw = makeEmailMessage(to, subject, html, "HD RIVIC GLOBAL <me>");
+    const result = await gmail.users.messages.send({ userId: "me", requestBody: { raw } });
+    console.log("[mailer] Availability notification sent to", to, "id:", result.data.id);
+  } catch (err) {
+    console.error("[mailer] Failed to send availability notification:", err);
   }
 }

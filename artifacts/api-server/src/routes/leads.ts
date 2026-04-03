@@ -1,8 +1,8 @@
 import { Router, type IRouter } from "express";
-import { db, leadsTable, propertiesTable, usersTable } from "@workspace/db";
+import { db, leadsTable, propertiesTable, usersTable, propertySubscribersTable } from "@workspace/db";
 import { CreateLeadBody } from "@workspace/api-zod";
-import { count, eq, desc } from "drizzle-orm";
-import { sendLeadNotificationEmail } from "../lib/mailer";
+import { count, eq, desc, and } from "drizzle-orm";
+import { sendLeadNotificationEmail, sendAvailabilityNotificationEmail } from "../lib/mailer";
 
 const router: IRouter = Router();
 
@@ -104,12 +104,23 @@ router.patch("/:id/status", async (req, res) => {
     const { status } = req.body as { status: string };
     const allowed = ["pendiente", "atendido", "vendido", "rentado", "comprado"];
     if (!allowed.includes(status)) return res.status(400).json({ error: "Invalid status" });
+
     const [lead] = await db
       .update(leadsTable)
       .set({ status })
       .where(eq(leadsTable.id, id))
       .returning();
     if (!lead) return res.status(404).json({ error: "Lead not found" });
+
+    // Auto-update property status when lead is closed as vendido or rentado
+    if (lead.propertyId && (status === "vendido" || status === "rentado")) {
+      const newTag = status === "vendido" ? "Vendido" : null;
+      await db
+        .update(propertiesTable)
+        .set({ status, tag: newTag })
+        .where(eq(propertiesTable.id, lead.propertyId));
+    }
+
     res.json(lead);
   } catch (err) {
     req.log.error({ err }, "Error updating lead status");
