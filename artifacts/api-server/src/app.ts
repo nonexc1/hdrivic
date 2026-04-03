@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
+import path from "path";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -59,6 +60,18 @@ app.use(
   }),
 );
 
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
+
 app.use("/api", router);
+
+if (process.env.NODE_ENV === "production") {
+  const staticPath = path.join(__dirname, "../../hd-rivic/dist/public");
+  app.use(express.static(staticPath));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(staticPath, "index.html"));
+  });
+}
 
 export default app;
