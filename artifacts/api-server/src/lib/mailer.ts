@@ -1,6 +1,15 @@
 // Gmail integration — Replit connector: google-mail
 import { google } from "googleapis";
 
+function getSiteUrl(): string {
+  const domains = process.env.REPLIT_DOMAINS;
+  if (domains) {
+    const primary = domains.split(",")[0].trim();
+    return `https://${primary}`;
+  }
+  return "https://hd-rivic-global-inmobiliaria.replit.app";
+}
+
 let connectionSettings: any;
 
 async function getAccessToken() {
@@ -111,7 +120,7 @@ export async function sendLeadNotificationEmail(
             </table>
           </div>
           <div style="text-align: center; margin-bottom: 32px;">
-            <a href="https://hd-rivic-global-inmobiliaria.replit.app/admin"
+            <a href="${getSiteUrl()}/admin"
                style="display: inline-block; background: #2B7FD4; color: white; padding: 14px 36px; border-radius: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none;">
               Ver en el Panel Admin
             </a>
@@ -163,7 +172,7 @@ export async function sendApprovalEmail(to: string, name: string) {
           </p>
 
           <div style="text-align: center; margin-bottom: 32px;">
-            <a href="https://hd-rivic-global-inmobiliaria.replit.app/login"
+            <a href="${getSiteUrl()}/login"
                style="display: inline-block; background: #1C3A6E; color: white; padding: 14px 36px; border-radius: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none;">
               Ir al Portal Admin
             </a>
@@ -221,7 +230,7 @@ export async function sendAvailabilityNotificationEmail(
             ahora está <strong style="color: #2B7FD4;">${statusLabel}</strong>.
           </p>
           <div style="text-align: center; margin-bottom: 32px;">
-            <a href="https://hd-rivic-global-inmobiliaria.replit.app/propiedades/${property.id}"
+            <a href="${getSiteUrl()}/propiedades/${property.id}"
                style="display: inline-block; background: #2B7FD4; color: white; padding: 14px 36px; border-radius: 6px; font-size: 14px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none;">
               Ver Propiedad
             </a>
