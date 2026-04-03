@@ -305,11 +305,16 @@ router.patch("/:id/status", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   try {
     const session = getSession(req);
+    if (!session.userId) {
+      res.status(401).json({ error: "No autenticado" });
+      return;
+    }
+
     const { id } = UpdatePropertyParams.parse({ id: parseInt(req.params.id) });
     const body = UpdatePropertyBody.parse(req.body);
 
     // Check ownership for admin (non-owner) users
-    if (session.userId && session.role === "admin") {
+    if (session.role === "admin") {
       const [existing] = await db.select().from(propertiesTable).where(eq(propertiesTable.id, id));
       if (!existing) {
         res.status(404).json({ error: "Property not found" });
