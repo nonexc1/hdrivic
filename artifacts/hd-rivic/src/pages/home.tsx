@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useGetFeaturedProperties } from "@workspace/api-client-react";
 import { PropertyCard } from "@/components/property-card";
-import { Search, Building2, Key, Calendar, Map, CheckCircle2, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Search, Building2, Key, Calendar, Map, ChevronDown } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { CIUDADES, getDistritos } from "@/lib/peru-locations";
 
 export default function Home() {
   const [, setLocation] = useLocation();
@@ -16,16 +17,27 @@ export default function Home() {
 
   const [searchStatus, setSearchStatus] = useState<string>("venta");
   const [searchType, setSearchType] = useState<string>("all");
-  const [searchDistrict, setSearchDistrict] = useState<string>("");
+  const [searchCity, setSearchCity] = useState<string>("all");
+  const [searchDistrict, setSearchDistrict] = useState<string>("all");
+
+  const districtOptions = useMemo(() => {
+    if (searchCity === "all") return [];
+    return getDistritos(searchCity);
+  }, [searchCity]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
     if (searchStatus && searchStatus !== "all") params.append("status", searchStatus);
     if (searchType && searchType !== "all") params.append("type", searchType);
-    if (searchDistrict) params.append("district", searchDistrict);
+    if (searchCity && searchCity !== "all") params.append("city", searchCity);
+    if (searchDistrict && searchDistrict !== "all") params.append("district", searchDistrict);
 
     setLocation(`/propiedades?${params.toString()}`);
+  };
+
+  const setOperation = (operation: string) => {
+    setSearchStatus(operation);
   };
 
   const services = [
@@ -77,9 +89,9 @@ export default function Home() {
 
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white/96 rounded-2xl shadow-2xl p-5 md:p-6 border border-white/70 backdrop-blur-sm">
               <div className="flex gap-2 mb-5">
-                <button className="flex-1 h-11 rounded-xl bg-primary text-white text-sm font-semibold">Comprar</button>
-                <button className="flex-1 h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Alquilar</button>
-                <button className="flex-1 h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Proyectos</button>
+                <button type="button" onClick={() => setOperation("venta")} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "venta" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Comprar</button>
+                <button type="button" onClick={() => setOperation("alquiler")} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "alquiler" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Alquilar</button>
+                <button type="button" onClick={() => setOperation("airbnb")} className={`flex-1 h-11 rounded-xl text-sm font-semibold ${searchStatus === "airbnb" ? "bg-primary text-white" : "bg-slate-100 text-slate-700"}`}>Proyectos</button>
               </div>
               <form onSubmit={handleSearch} className="grid gap-4">
                 <div>
@@ -96,8 +108,32 @@ export default function Home() {
                   </Select>
                 </div>
                 <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ciudad</label>
+                  <Select value={searchCity} onValueChange={(value) => { setSearchCity(value); setSearchDistrict("all"); }}>
+                    <SelectTrigger className="w-full border-gray-200 bg-gray-50 h-12">
+                      <SelectValue placeholder="Selecciona una ciudad" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas las ciudades</SelectItem>
+                      {CIUDADES.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Distrito</label>
-                  <Input placeholder="Ej. Miraflores, San Isidro..." className="w-full border-gray-200 bg-gray-50 h-12" value={searchDistrict} onChange={(e) => setSearchDistrict(e.target.value)} />
+                  <Select value={searchDistrict} onValueChange={setSearchDistrict} disabled={searchCity === "all"}>
+                    <SelectTrigger className="w-full border-gray-200 bg-gray-50 h-12">
+                      <SelectValue placeholder={searchCity === "all" ? "Primero elige una ciudad" : "Selecciona un distrito"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los distritos</SelectItem>
+                      {districtOptions.map((district) => (
+                        <SelectItem key={district} value={district}>{district}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Rango de precio</label>

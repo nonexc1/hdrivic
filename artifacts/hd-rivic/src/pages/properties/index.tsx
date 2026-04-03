@@ -1,13 +1,14 @@
 import { Layout } from "@/components/layout";
 import { PropertyCard } from "@/components/property-card";
 import { useListProperties, useListDistricts } from "@workspace/api-client-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { CIUDADES, getDistritos } from "@/lib/peru-locations";
 
 export default function Properties() {
   const [location] = useLocation();
@@ -16,16 +17,22 @@ export default function Properties() {
   // Filter states
   const [status, setStatus] = useState<string>(searchParams.get("status") || "all");
   const [type, setType] = useState<string>(searchParams.get("type") || "all");
+  const [city, setCity] = useState<string>(searchParams.get("city") || "all");
   const [district, setDistrict] = useState<string>(searchParams.get("district") || "all");
   const [minPrice, setMinPrice] = useState<string>(searchParams.get("minPrice") || "");
   const [maxPrice, setMaxPrice] = useState<string>(searchParams.get("maxPrice") || "");
 
   const { data: districtsData } = useListDistricts();
+  const districtOptions = useMemo(() => {
+    if (city === "all") return districtsData?.districts ?? [];
+    return getDistritos(city);
+  }, [city, districtsData]);
   
   // Construct query params safely
   const queryParams: any = {};
   if (status && status !== "all") queryParams.status = status;
   if (type && type !== "all") queryParams.type = type;
+  if (city && city !== "all") queryParams.city = city;
   if (district && district !== "all") queryParams.district = district;
   if (minPrice) queryParams.minPrice = Number(minPrice);
   if (maxPrice) queryParams.maxPrice = Number(maxPrice);
@@ -35,6 +42,7 @@ export default function Properties() {
   const clearFilters = () => {
     setStatus("all");
     setType("all");
+    setCity("all");
     setDistrict("all");
     setMinPrice("");
     setMaxPrice("");
@@ -75,14 +83,29 @@ export default function Properties() {
       </div>
 
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-2">Distrito</label>
-        <Select value={district} onValueChange={setDistrict}>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Ciudad</label>
+        <Select value={city} onValueChange={(value) => { setCity(value); setDistrict("all"); }}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Todos los distritos" />
+            <SelectValue placeholder="Todas las ciudades" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las ciudades</SelectItem>
+            {CIUDADES.map((item) => (
+              <SelectItem key={item} value={item}>{item}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-bold text-gray-700 mb-2">Distrito</label>
+        <Select value={district} onValueChange={setDistrict} disabled={city === "all"}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={city === "all" ? "Primero elige una ciudad" : "Todos los distritos"} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los distritos</SelectItem>
-            {districtsData?.districts?.map(d => (
+            {districtOptions.map(d => (
               <SelectItem key={d} value={d}>{d}</SelectItem>
             ))}
           </SelectContent>
