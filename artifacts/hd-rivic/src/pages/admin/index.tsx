@@ -1,5 +1,5 @@
 import { Layout } from "@/components/layout";
-import { useGetCurrentUser, useGetPropertyStats, useListProperties, useListLeads, useListUsers, useApproveUser, useCreateProperty, useUpdateProperty, useDeleteProperty, getGetPropertyStatsQueryKey, getListPropertiesQueryKey, getListLeadsQueryKey, getListUsersQueryKey } from "@workspace/api-client-react";
+import { useGetCurrentUser, useGetPropertyStats, useListProperties, useListLeads, useListUsers, useApproveUser, useCreateProperty, useUpdateProperty, useDeleteProperty, getGetPropertyStatsQueryKey, getListPropertiesQueryKey, getGetPropertyQueryKey, getListLeadsQueryKey, getListUsersQueryKey } from "@workspace/api-client-react";
 import { useUpload } from "@workspace/object-storage-web";
 import { useLocation, Link } from "wouter";
 import { useEffect, useState, useRef } from "react";
@@ -341,6 +341,7 @@ function PropertyStatusSelect({ propertyId, currentStatus }: { propertyId: numbe
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListPropertiesQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetPropertyStatsQueryKey() });
+        queryClient.invalidateQueries({ queryKey: getGetPropertyQueryKey(propertyId) });
         toast({ title: "Estado actualizado correctamente" });
       },
       onError: (err: any) => {
