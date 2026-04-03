@@ -53,29 +53,29 @@ export default function Home() {
 
   return (
     <Layout>
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(43,127,212,0.16),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(28,58,110,0.10),_transparent_28%),linear-gradient(135deg,rgba(247,250,252,1),rgba(233,241,249,1))]" />
-        <div className="absolute inset-0 bg-[url('/images/hero-1.png')] bg-cover bg-center opacity-[0.08] mix-blend-multiply" />
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-slate-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(43,127,212,0.28),_transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(28,58,110,0.38),_transparent_32%),linear-gradient(135deg,rgba(10,18,35,0.96),rgba(17,35,61,0.93))]" />
+        <div className="absolute inset-0 bg-[url('/images/hero-1.png')] bg-cover bg-center opacity-[0.11] mix-blend-screen" />
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10 items-center">
             <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-primary text-xs font-semibold tracking-[0.2em] uppercase mb-6 backdrop-blur-sm border border-white/60 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white text-xs font-semibold tracking-[0.2em] uppercase mb-6 backdrop-blur-sm border border-white/15 shadow-sm">
                 HD RIVIC GLOBAL S.A.C.
               </div>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-sans font-bold text-primary leading-tight mb-6">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-sans font-bold text-white leading-tight mb-6">
                 Encuentra tu hogar con estilo profesional.
               </h1>
-              <p className="text-lg md:text-xl text-gray-600 max-w-2xl mb-8 font-light leading-relaxed">
+              <p className="text-lg md:text-xl text-white/78 max-w-2xl mb-8 font-light leading-relaxed">
                 Plataforma inmobiliaria moderna, clara y confiable para comprar, alquilar y descubrir proyectos en Perú.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link href="/propiedades"><Button className="h-12 px-6 bg-secondary hover:bg-secondary/90 text-white font-bold">Ver propiedades</Button></Link>
-                <Link href="/admin"><Button variant="outline" className="h-12 px-6 border-primary/20 text-primary hover:bg-primary hover:text-white bg-white/90">Portal admin</Button></Link>
+                <Link href="/admin"><Button variant="outline" className="h-12 px-6 border-white/25 text-white hover:bg-white hover:text-primary bg-transparent">Portal admin</Button></Link>
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white/95 rounded-2xl shadow-2xl p-5 md:p-6 border border-white/70 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} className="bg-white/96 rounded-2xl shadow-2xl p-5 md:p-6 border border-white/70 backdrop-blur-sm">
               <div className="flex gap-2 mb-5">
                 <button className="flex-1 h-11 rounded-xl bg-primary text-white text-sm font-semibold">Comprar</button>
                 <button className="flex-1 h-11 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold">Alquilar</button>
