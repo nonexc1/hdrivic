@@ -409,7 +409,11 @@ function PropertiesTab({ currentUser }: { currentUser: any }) {
             {propertiesData?.properties.map((property) => (
               <TableRow key={property.id}>
                 <TableCell className="font-medium">#{property.id}</TableCell>
-                <TableCell className="max-w-[180px] truncate">{property.title}</TableCell>
+                <TableCell className="max-w-[180px] truncate">
+                  <Link href={`/propiedades/${property.id}`} className="text-secondary hover:underline font-medium">
+                    {property.title}
+                  </Link>
+                </TableCell>
                 <TableCell>
                   <PropertyStatusSelect propertyId={property.id} currentStatus={property.status} />
                 </TableCell>
