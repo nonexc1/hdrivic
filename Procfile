@@ -1,1 +1,1 @@
-web: pnpm run dev
+web: npx tsx server/index.ts
